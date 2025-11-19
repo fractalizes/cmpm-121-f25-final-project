@@ -36,6 +36,7 @@
     "ci": "deno fmt --check && deno lint && deno check src/**/*.ts && deno task build"
   },
   "exclude": [
+    "lib/*",
     "node_modules",
     "dist",
     ".git"
