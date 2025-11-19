@@ -1,3 +1,5 @@
+// deno-fmt-ignore-file
+
 // https://vitejs.dev/config/
 export default {
   base: Deno.env.get("REPO_NAME") || "/project",

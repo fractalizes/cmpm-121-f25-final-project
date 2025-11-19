@@ -370,9 +370,18 @@
       "bin": true
     }
   },
+  "remote": {
+    "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js": "a97ec6852978949b7941c070b81292b842473a37549222353fa0a70c18d7285a"
+  },
   "workspace": {
     "dependencies": [
       "npm:vite@7"
-    ]
+    ],
+    "packageJson": {
+      "dependencies": [
+        "npm:ammo@^3.0.3",
+        "npm:three@~0.181.2"
+      ]
+    }
   }
 }
