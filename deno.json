@@ -39,7 +39,7 @@
     ".devcontainer/",
     ".vscode/",
     ".github/workflows/",
-    "lib/",
+    "public/lib/",
     "deno.json",
     "README.md",
     "node_modules",
