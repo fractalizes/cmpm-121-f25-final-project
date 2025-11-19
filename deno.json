@@ -36,6 +36,9 @@
     "ci": "deno fmt --check && deno lint && deno check src/**/*.js && deno task build"
   },
   "exclude": [
+    ".devcontainer/",
+    ".vscode/",
+    ".github/workflows/",
     "lib/",
     "deno.json",
     "README.md",
