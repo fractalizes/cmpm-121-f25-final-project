@@ -11,9 +11,7 @@ let tempTransformation = undefined;
 const rigidBodies = [];
 const colGroupPlane = 1, colGroupRedBall = 2, colGroupGreenBall = 4;
 
-globalThis.addEventListener("load", () => {
-  Ammo().then(start);
-});
+Ammo().then(start);
 
 function start() {
   tempTransformation = new Ammo.btTransform();
