@@ -23,7 +23,9 @@ let playerBall = null,
     a: false,
     s: false,
     d: false,
-  };
+  },
+  numBalls = 3,
+  popUp = false;
 let puzzleBlock = null,
   puzzleBody = null;
 let groundBlock = null;
@@ -67,7 +69,7 @@ function renderFrame() {
 
   movePlayer();
   checkContact();
-  blockHitsFloor();
+  if (!popUp) blockHitsFloor();
 
   updatePhysics(deltaTime);
   updateCameraFollow();
@@ -337,9 +339,17 @@ function blockHitsFloor() {
     groundBlock.userData.physicsBody,
     cbContactPairResult,
   );
-  if (!cbContactPairResult.hasContact) return;
-
-  console.log("hit the floor!");
+  if (!cbContactPairResult.hasContact) {
+    if (numBalls > 0) return;
+    globalThis.alert(
+      "you have lost, you have not knocked down the orange cube and ran out of balls :(",
+    );
+  } else {
+    globalThis.alert(
+      "you have successfully knocked down the orange cube! :D",
+    );
+  }
+  popUp = true;
 }
 
 export function shoot(event) {
@@ -369,4 +379,6 @@ export function shoot(event) {
 
   ball.userData.physicsBody = body;
   rigidBodies.push(ball);
+
+  numBalls--;
 }
