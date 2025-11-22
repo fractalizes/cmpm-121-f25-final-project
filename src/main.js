@@ -17,9 +17,9 @@ const rigidBodies = [];
 const mouseCoords = new THREE.Vector2(),
   raycaster = new THREE.Raycaster(),
   tempPos = new THREE.Vector3();
-const colGroupPlane = 1,
+/*const colGroupPlane = 1,
   colGroupRedBall = 2,
-  colGroupPurpleBall = 4;
+  colGroupPurpleBall = 4;*/
 const STATE = { DISABLE_DEACTIVATION: 4 };
 
 const cameraOffset = new THREE.Vector3(0, 20, 40);
@@ -44,7 +44,7 @@ function start() {
   scene = s, camera = c, renderer = r, clock = k;
 
   createGround();
-  createBall();
+  createPlayer();
 
   renderFrame();
 }
@@ -71,6 +71,16 @@ function createGround() {
     color = 0xa0afa4;
 
   createBlock(pos, scale, quat, mass, color);
+}
+
+function createPlayer() {
+  const pos = { x: 0, y: 20, z: 0 },
+    radius = 2,
+    quat = { x: 0, y: 0, z: 0, w: 1 },
+    mass = 1,
+    color = 0xff0505;
+
+  globalThis.playerBall = createBall(pos, radius, quat, mass, color);
 }
 
 function createBlock(pos, scale, quat, mass, color) {
@@ -132,15 +142,10 @@ function createBlock(pos, scale, quat, mass, color) {
   physicsWorld.addRigidBody(body);
 }
 
-function createBall() {
-  const pos = { x: 0, y: 20, z: 0 },
-    radius = 2,
-    quat = { x: 0, y: 0, z: 0, w: 1 },
-    mass = 1;
-
+function createBall(pos, radius, quat, mass, color) {
   const ball = new THREE.Mesh(
     new THREE.SphereGeometry(radius),
-    new THREE.MeshPhongMaterial({ color: 0xff0505 }),
+    new THREE.MeshPhongMaterial({ color: color }),
   );
 
   ball.position.set(pos.x, pos.y, pos.z);
@@ -193,7 +198,7 @@ function createBall() {
   ball.userData.physicsBody = body;
   rigidBodies.push(ball);
 
-  globalThis.playerBall = body;
+  return body;
 }
 
 function movePlayer() {
