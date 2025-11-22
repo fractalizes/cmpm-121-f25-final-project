@@ -1,4 +1,5 @@
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js";
+import { shoot } from "./main.js";
 
 export function initPhysicsWorld() {
   const collisionConfiguration = new Ammo.btDefaultCollisionConfiguration(),
@@ -68,9 +69,10 @@ export function initGraphics() {
   return { scene, camera, renderer, clock };
 }
 
-export function initMovement() {
+export function initEventHandlers() {
   globalThis.addEventListener("keydown", handleKeyDown, false);
   globalThis.addEventListener("keyup", handleKeyUp, false);
+  globalThis.addEventListener("mousedown", shoot, false);
 
   const keys = {
     w: false,
@@ -88,4 +90,66 @@ export function initMovement() {
   }
 
   return keys;
+}
+
+export function initContactResultCallback() {
+  const cbContactResult = new Ammo.ConcreteContactResultCallback();
+  cbContactResult.addSingleResult = function (
+    cp,
+    colObj0Wrap,
+    _partId0,
+    _index0,
+    colObj1Wrap,
+    _partId1,
+    _index1,
+  ) {
+    const contactPoint = Ammo.wrapPointer(cp, Ammo.btManifoldPoint);
+
+    const distance = contactPoint.getDistance();
+    if (distance > 0) return;
+
+    const colWrapper0 = Ammo.wrapPointer(
+      colObj0Wrap,
+      Ammo.btCollisionObjectWrapper,
+    );
+    const rb0 = Ammo.castObject(
+      colWrapper0.getCollisionObject(),
+      Ammo.btRigidBody,
+    );
+
+    const colWrapper1 = Ammo.wrapPointer(
+      colObj1Wrap,
+      Ammo.btCollisionObjectWrapper,
+    );
+    const rb1 = Ammo.castObject(
+      colWrapper1.getCollisionObject(),
+      Ammo.btRigidBody,
+    );
+
+    console.log(rb0, rb1);
+  };
+  return cbContactResult;
+}
+
+// checks for contact between two objects
+export function initContactPairResultCallback() {
+  const cbContactPairResult = new Ammo.ConcreteContactResultCallback();
+
+  cbContactPairResult.hasContact = false;
+
+  cbContactPairResult.addSingleResult = function (
+    cp,
+    _colObj0Wrap,
+    _partId0,
+    _index0,
+    _colObj1Wrap,
+    _partId1,
+    _index1,
+  ) {
+    const contactPoint = Ammo.wrapPointer(cp, Ammo.btManifoldPoint);
+    if (contactPoint.getDistance() > 0) return;
+
+    this.hasContact = true;
+  };
+  return cbContactPairResult;
 }

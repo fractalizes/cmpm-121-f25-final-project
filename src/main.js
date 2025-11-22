@@ -5,13 +5,16 @@
 
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js";
 import {
+  initContactPairResultCallback,
+  initContactResultCallback,
   initGraphics,
-  initMovement,
   initPhysicsWorld,
 } from "./initialization.js";
 
 let physicsWorld, scene, camera, renderer, clock;
 let tempTransformation = undefined;
+let cbContactResult,
+  cbContactPairResult;
 let playerBall = null,
   playerBody = null,
   keys = {
@@ -32,20 +35,24 @@ const FLAGS = { CF_KINEMATIC_OBJ: 2 };
 const cameraOffset = new THREE.Vector3(0, 20, 40);
 const cameraSmoothness = 0.05;
 
+// initialize ammo
 Ammo().then(start);
 
 function start() {
   tempTransformation = new Ammo.btTransform();
 
-  // initialize everything
+  // initialize ammo environment configurations
   physicsWorld = initPhysicsWorld();
-  keys = initMovement();
+  keys = initEventHandlers();
   const { scene: s, camera: c, renderer: r, clock: k } = initGraphics();
   scene = s, camera = c, renderer = r, clock = k;
 
   createGround();
   createPlayer();
   createKinematicBox();
+
+  cbContactResult = initContactResultCallback();
+  cbContactPairResult = initContactPairResultCallback();
 
   renderFrame();
 }
@@ -54,6 +61,7 @@ function renderFrame() {
   const deltaTime = clock.getDelta();
 
   movePlayer();
+  checkContact();
 
   updatePhysics(deltaTime);
   updateCameraFollow();
@@ -276,8 +284,12 @@ function updatePhysics(deltaTime) {
   }
 }
 
-// "shoot" button (mouse1 down)
-globalThis.addEventListener("mousedown", (event) => {
+// checks for contact between any object
+function checkContact() {
+  physicsWorld.contactTest(playerBall.userData.physicsBody, cbContactResult);
+}
+
+export function shoot() {
   mouseCoords.set(
     (event.clientX / globalThis.innerWidth) * 2 - 1,
     -(event.clientY / globalThis.innerHeight) * 2 + 1,
@@ -304,4 +316,4 @@ globalThis.addEventListener("mousedown", (event) => {
 
   ball.userData.physicsBody = body;
   rigidBodies.push(ball);
-});
+}
