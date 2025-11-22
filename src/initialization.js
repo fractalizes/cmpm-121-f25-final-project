@@ -72,7 +72,7 @@ export function initGraphics() {
 export function initEventHandlers() {
   globalThis.addEventListener("keydown", handleKeyDown, false);
   globalThis.addEventListener("keyup", handleKeyUp, false);
-  globalThis.addEventListener("mousedown", shoot, false);
+  globalThis.addEventListener("mousedown", (e) => shoot(e), false);
 
   const keys = {
     w: false,
@@ -96,10 +96,10 @@ export function initContactResultCallback() {
   const cbContactResult = new Ammo.ConcreteContactResultCallback();
   cbContactResult.addSingleResult = function (
     cp,
-    colObj0Wrap,
+    _colObj0Wrap,
     _partId0,
     _index0,
-    colObj1Wrap,
+    _colObj1Wrap,
     _partId1,
     _index1,
   ) {
@@ -108,25 +108,25 @@ export function initContactResultCallback() {
     const distance = contactPoint.getDistance();
     if (distance > 0) return;
 
-    const colWrapper0 = Ammo.wrapPointer(
-      colObj0Wrap,
-      Ammo.btCollisionObjectWrapper,
-    );
-    const rb0 = Ammo.castObject(
-      colWrapper0.getCollisionObject(),
-      Ammo.btRigidBody,
-    );
+    // const colWrapper0 = Ammo.wrapPointer(
+    //   colObj0Wrap,
+    //   Ammo.btCollisionObjectWrapper,
+    // );
+    // const rb0 = Ammo.castObject(
+    //   colWrapper0.getCollisionObject(),
+    //   Ammo.btRigidBody,
+    // );
 
-    const colWrapper1 = Ammo.wrapPointer(
-      colObj1Wrap,
-      Ammo.btCollisionObjectWrapper,
-    );
-    const rb1 = Ammo.castObject(
-      colWrapper1.getCollisionObject(),
-      Ammo.btRigidBody,
-    );
+    // const colWrapper1 = Ammo.wrapPointer(
+    //   colObj1Wrap,
+    //   Ammo.btCollisionObjectWrapper,
+    // );
+    // const rb1 = Ammo.castObject(
+    //   colWrapper1.getCollisionObject(),
+    //   Ammo.btRigidBody,
+    // );
 
-    console.log(rb0, rb1);
+    // console.log(rb0, rb1);
   };
   return cbContactResult;
 }
@@ -134,9 +134,7 @@ export function initContactResultCallback() {
 // checks for contact between two objects
 export function initContactPairResultCallback() {
   const cbContactPairResult = new Ammo.ConcreteContactResultCallback();
-
   cbContactPairResult.hasContact = false;
-
   cbContactPairResult.addSingleResult = function (
     cp,
     _colObj0Wrap,

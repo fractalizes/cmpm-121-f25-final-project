@@ -7,6 +7,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
 import {
   initContactPairResultCallback,
   initContactResultCallback,
+  initEventHandlers,
   initGraphics,
   initPhysicsWorld,
 } from "./initialization.js";
@@ -23,6 +24,9 @@ let playerBall = null,
     s: false,
     d: false,
   };
+let puzzleBlock = null,
+  puzzleBody = null;
+let groundBlock = null;
 
 const rigidBodies = [];
 const mouseCoords = new THREE.Vector2(),
@@ -50,6 +54,7 @@ function start() {
   createGround();
   createPlayer();
   createKinematicBox();
+  createPuzzleBox();
 
   cbContactResult = initContactResultCallback();
   cbContactPairResult = initContactPairResultCallback();
@@ -62,6 +67,7 @@ function renderFrame() {
 
   movePlayer();
   checkContact();
+  blockHitsFloor();
 
   updatePhysics(deltaTime);
   updateCameraFollow();
@@ -79,11 +85,20 @@ function createGround() {
     mass = 0,
     color = 0xa0afa4;
 
-  const { body: body } = createBlock(pos, scale, quat, mass, color);
+  const { body: groundBody, block: block } = createBlock(
+    pos,
+    scale,
+    quat,
+    mass,
+    color,
+  );
+  groundBlock = block;
 
-  body.setFriction(4);
-  body.setRollingFriction(10);
-  physicsWorld.addRigidBody(body);
+  groundBody.setFriction(4);
+  groundBody.setRollingFriction(10);
+  physicsWorld.addRigidBody(groundBody);
+
+  groundBlock.userData.physicsBody = groundBody;
 }
 
 function createPlayer() {
@@ -169,7 +184,7 @@ function createKinematicBox() {
     mass = 1,
     color = 0x30ab78;
 
-  const { block: kineBox, body: body } = createBlock(
+  const { block: box, body: body } = createBlock(
     pos,
     scale,
     quat,
@@ -181,9 +196,35 @@ function createKinematicBox() {
   body.setCollisionFlags(FLAGS.CF_KINEMATIC_OBJ);
 
   physicsWorld.addRigidBody(body);
-  kineBox.userData.physicsBody = body;
+  box.userData.physicsBody = body;
 
-  return { kineBox, body };
+  return { box, body };
+}
+
+function createPuzzleBox() {
+  const pos = { x: 40, y: 10, z: 5 },
+    scale = { x: 5, y: 5, z: 5 },
+    quat = { x: 0, y: 0, z: 0, w: 1 },
+    mass = 1,
+    color = 0xff9500;
+
+  const { block: block, body: body } = createBlock(
+    pos,
+    scale,
+    quat,
+    mass,
+    color,
+  );
+  puzzleBlock = block, puzzleBody = body;
+
+  puzzleBody.setFriction(4);
+  puzzleBody.setRollingFriction(10);
+  puzzleBody.setActivationState(STATE.DISABLE_DEACTIVATION);
+
+  physicsWorld.addRigidBody(puzzleBody);
+
+  puzzleBlock.userData.physicsBody = puzzleBody;
+  rigidBodies.push(puzzleBlock);
 }
 
 function createBall(pos, radius, quat, mass, color) {
@@ -289,7 +330,19 @@ function checkContact() {
   physicsWorld.contactTest(playerBall.userData.physicsBody, cbContactResult);
 }
 
-export function shoot() {
+function blockHitsFloor() {
+  cbContactPairResult.hasContact = false;
+  physicsWorld.contactPairTest(
+    puzzleBlock.userData.physicsBody,
+    groundBlock.userData.physicsBody,
+    cbContactPairResult,
+  );
+  if (!cbContactPairResult.hasContact) return;
+
+  console.log("hit the floor!");
+}
+
+export function shoot(event) {
   mouseCoords.set(
     (event.clientX / globalThis.innerWidth) * 2 - 1,
     -(event.clientY / globalThis.innerHeight) * 2 + 1,
