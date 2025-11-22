@@ -12,12 +12,14 @@ import {
 
 let physicsWorld, scene, camera, renderer, clock;
 let tempTransformation = undefined;
-let keys = {
-  w: false,
-  a: false,
-  s: false,
-  d: false,
-};
+let playerBall = null,
+  playerBody = null,
+  keys = {
+    w: false,
+    a: false,
+    s: false,
+    d: false,
+  };
 
 const rigidBodies = [];
 const mouseCoords = new THREE.Vector2(),
@@ -69,7 +71,11 @@ function createGround() {
     mass = 0,
     color = 0xa0afa4;
 
-  createBlock(pos, scale, quat, mass, color);
+  const { body: body } = createBlock(pos, scale, quat, mass, color);
+
+  body.setFriction(4);
+  body.setRollingFriction(10);
+  physicsWorld.addRigidBody(body);
 }
 
 function createPlayer() {
@@ -79,7 +85,17 @@ function createPlayer() {
     mass = 1,
     color = 0xff0505;
 
-  globalThis.playerBall = createBall(pos, radius, quat, mass, color);
+  const { ball: ball, body: body } = createBall(pos, radius, quat, mass, color);
+  playerBall = ball, playerBody = body;
+
+  playerBody.setFriction(4);
+  playerBody.setRollingFriction(10);
+  playerBody.setActivationState(STATE.DISABLE_DEACTIVATION);
+
+  physicsWorld.addRigidBody(playerBody);
+
+  ball.userData.physicsBody = playerBody;
+  rigidBodies.push(ball);
 }
 
 function createBlock(pos, scale, quat, mass, color) {
@@ -135,71 +151,31 @@ function createBlock(pos, scale, quat, mass, color) {
   );
   const body = new Ammo.btRigidBody(rbInfo);
 
-  body.setFriction(4);
-  body.setRollingFriction(10);
-
-  physicsWorld.addRigidBody(body);
+  return { block, body };
 }
 
 function createKinematicBox() {
   const pos = { x: 40, y: 5, z: 5 },
     scale = { x: 10, y: 10, z: 10 },
     quat = { x: 0, y: 0, z: 0, w: 1 },
-    mass = 1;
+    mass = 1,
+    color = 0x30ab78;
 
-  //threeJS Section
-  const kineBox = new THREE.Mesh(
-    new THREE.BoxGeometry(),
-    new THREE.MeshPhongMaterial({ color: 0x30ab78 }),
-  );
-
-  kineBox.position.set(pos.x, pos.y, pos.z);
-  kineBox.scale.set(scale.x, scale.y, scale.z);
-
-  kineBox.castShadow = true;
-  kineBox.receiveShadow = true;
-
-  scene.add(kineBox);
-
-  const transform = new Ammo.btTransform();
-  transform.setIdentity();
-  transform.setOrigin(
-    new Ammo.btVector3(
-      pos.x,
-      pos.y,
-      pos.z,
-    ),
-  );
-  transform.setRotation(
-    new Ammo.btQuaternion(
-      quat.x,
-      quat.y,
-      quat.z,
-      quat.w,
-    ),
-  );
-  const motionState = new Ammo.btDefaultMotionState(transform);
-  const colShape = new Ammo.btBoxShape(
-    new Ammo.btVector3(scale.x * 0.5, scale.y * 0.5, scale.z * 0.5),
-  );
-  colShape.setMargin(0.05);
-
-  const localInertia = new Ammo.btVector3(0, 0, 0);
-  colShape.calculateLocalInertia(mass, localInertia);
-
-  const rbInfo = new Ammo.btRigidBodyConstructionInfo(
+  const { block: kineBox, body: body } = createBlock(
+    pos,
+    scale,
+    quat,
     mass,
-    motionState,
-    colShape,
-    localInertia,
+    color,
   );
-  const body = new Ammo.btRigidBody(rbInfo);
 
   body.setActivationState(STATE.DISABLE_DEACTIVATION);
   body.setCollisionFlags(FLAGS.CF_KINEMATIC_OBJ);
 
   physicsWorld.addRigidBody(body);
   kineBox.userData.physicsBody = body;
+
+  return { kineBox, body };
 }
 
 function createBall(pos, radius, quat, mass, color) {
@@ -249,20 +225,11 @@ function createBall(pos, radius, quat, mass, color) {
   );
   const body = new Ammo.btRigidBody(rbInfo);
 
-  body.setFriction(4);
-  body.setRollingFriction(10);
-  body.setActivationState(STATE.DISABLE_DEACTIVATION);
-
-  physicsWorld.addRigidBody(body);
-
-  ball.userData.physicsBody = body;
-  rigidBodies.push(ball);
-
-  return body;
+  return { ball, body };
 }
 
 function movePlayer() {
-  if (!globalThis.playerBall) return;
+  if (!playerBody) return;
 
   const acceleration = 80;
   const force = new Ammo.btVector3(0, 0, 0);
@@ -272,11 +239,11 @@ function movePlayer() {
   if (keys.a) force.setX(-acceleration);
   if (keys.d) force.setX(acceleration);
 
-  globalThis.playerBall.applyCentralForce(force);
+  playerBody.applyCentralForce(force);
 }
 
 function updateCameraFollow() {
-  if (!globalThis.playerBall) return;
+  if (!playerBody) return;
   const ballPos = rigidBodies[0].position;
 
   const desiredPos = new THREE.Vector3(
@@ -324,54 +291,10 @@ globalThis.addEventListener("mousedown", (event) => {
   const pos = { x: tempPos.x, y: tempPos.y, z: tempPos.z },
     radius = 1,
     quat = { x: 0, y: 0, z: 0, w: 1 },
-    mass = 1;
+    mass = 1,
+    color = 0x6b246e;
 
-  const ball = new THREE.Mesh(
-    new THREE.SphereGeometry(radius),
-    new THREE.MeshPhongMaterial({ color: 0x6b246e }),
-  );
-
-  ball.position.set(pos.x, pos.y, pos.z);
-
-  ball.castShadow = true;
-  ball.receiveShadow = true;
-
-  scene.add(ball);
-
-  const transform = new Ammo.btTransform();
-  transform.setIdentity();
-
-  transform.setOrigin(
-    new Ammo.btVector3(
-      pos.x,
-      pos.y,
-      pos.z,
-    ),
-  );
-  transform.setRotation(
-    new Ammo.btQuaternion(
-      quat.x,
-      quat.y,
-      quat.z,
-      quat.w,
-    ),
-  );
-  const motionState = new Ammo.btDefaultMotionState(transform);
-
-  const colShape = new Ammo.btSphereShape(radius);
-  colShape.setMargin(0.05);
-
-  const localInertia = new Ammo.btVector3(0, 0, 0);
-  colShape.calculateLocalInertia(mass, localInertia);
-
-  const rbInfo = new Ammo.btRigidBodyConstructionInfo(
-    mass,
-    motionState,
-    colShape,
-    localInertia,
-  );
-  const body = new Ammo.btRigidBody(rbInfo);
-
+  const { ball: ball, body: body } = createBall(pos, radius, quat, mass, color);
   physicsWorld.addRigidBody(body);
 
   tempPos.copy(raycaster.ray.direction);
