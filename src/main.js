@@ -94,8 +94,8 @@ function createPlayer() {
 
   physicsWorld.addRigidBody(playerBody);
 
-  ball.userData.physicsBody = playerBody;
-  rigidBodies.push(ball);
+  playerBall.userData.physicsBody = playerBody;
+  rigidBodies.push(playerBall);
 }
 
 function createBlock(pos, scale, quat, mass, color) {
