@@ -11,6 +11,28 @@ let tempTransformation = undefined;
 const rigidBodies = [];
 const colGroupPlane = 1, colGroupRedBall = 2, colGroupGreenBall = 4;
 
+let cameraOffset = new THREE.Vector3(0, 20, 40);
+let cameraSmoothness = 0.05;
+
+const keys = {
+  w: false,
+  a: false,
+  s: false,
+  d: false,
+}
+
+window.addEventListener('keydown', (event) => {
+  if (event.key in keys) {
+    keys[event.key] = true;
+  }
+});
+
+window.addEventListener('keyup', (event) => {
+  if (event.key in keys) {
+    keys[event.key] = false;
+  }
+});
+
 Ammo().then(start);
 
 function start() {
@@ -92,8 +114,10 @@ function initGraphics() {
 }
 
 function renderFrame() {
+  
   const deltaTime = clock.getDelta();
   updatePhysics(deltaTime);
+  updateCameraFollow();
   renderer.render(scene, camera);
 
   requestAnimationFrame(renderFrame);
@@ -101,7 +125,7 @@ function renderFrame() {
 
 function createBlock() {
   const pos = { x: 0, y: 0, z: 0 },
-    scale = { x: 50, y: 2, z: 50 },
+    scale = { x: 500, y: 1, z: 500},
     quat = { x: 0, y: 0, z: 0, w: 1 },
     mass = 0;
 
@@ -111,7 +135,6 @@ function createBlock() {
   );
 
   blockPlane.position.set(pos.x, pos.y, pos.z);
-  blockPlane.scale.set(scale.x, scale.y, scale.z);
 
   blockPlane.castShadow = true;
   blockPlane.receiveShadow = true;
@@ -189,6 +212,39 @@ function createBall() {
 
   ball.userData.physicsBody = body;
   rigidBodies.push(ball);
+
+  window.playerBall = body;
+}
+
+function playerControls() {
+  const Maxspeed = 25;
+  const acceleration = 80;
+  const force = new Ammo.btVector3(0, 0, 0);
+
+  if (keys.w) force.setZ(-acceleration);
+  if (keys.s) force.setZ(acceleration);
+  if (keys.a) force.setX(-acceleration);
+  if (keys.d) force.setX(acceleration);
+
+  window.playerBall.applyCentralForce(force);
+
+
+}
+
+function updateCameraFollow() {
+  if (!window.playerBall) return;
+
+  const ballPos = rigidBodies[0].position;
+
+  const desiredPos = new THREE.Vector3(
+    ballPos.x + cameraOffset.x,
+    ballPos.y + cameraOffset.y,
+    ballPos.z + cameraOffset.z
+  );
+
+  camera.position.lerp(desiredPos, cameraSmoothness);
+
+  camera.lookAt(ballPos);
 }
 
 function updatePhysics(deltaTime) {
@@ -209,4 +265,5 @@ function updatePhysics(deltaTime) {
       objThree.quaternion.set(q.x(), q.y(), q.z(), q.w());
     }
   }
+  playerControls();
 }
