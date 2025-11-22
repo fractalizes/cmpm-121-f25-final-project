@@ -68,9 +68,10 @@ export function initGraphics() {
   return { scene, camera, renderer, clock };
 }
 
-export function initEventHandlers() {
+export function initMovement() {
   globalThis.addEventListener("keydown", handleKeyDown, false);
   globalThis.addEventListener("keyup", handleKeyUp, false);
+
   const keys = {
     w: false,
     a: false,
