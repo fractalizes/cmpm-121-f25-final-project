@@ -19,15 +19,15 @@ const keys = {
   a: false,
   s: false,
   d: false,
-}
+};
 
-window.addEventListener('keydown', (event) => {
+window.addEventListener("keydown", (event) => {
   if (event.key in keys) {
     keys[event.key] = true;
   }
 });
 
-window.addEventListener('keyup', (event) => {
+window.addEventListener("keyup", (event) => {
   if (event.key in keys) {
     keys[event.key] = false;
   }
@@ -114,7 +114,6 @@ function initGraphics() {
 }
 
 function renderFrame() {
-  
   const deltaTime = clock.getDelta();
   updatePhysics(deltaTime);
   updateCameraFollow();
@@ -228,7 +227,6 @@ function playerControls() {
 
   window.playerBall.applyCentralForce(force);
 
-
 }
 
 function updateCameraFollow() {
@@ -237,9 +235,9 @@ function updateCameraFollow() {
   const ballPos = rigidBodies[0].position;
 
   const desiredPos = new THREE.Vector3(
-    ballPos.x + cameraOffset.x,
-    ballPos.y + cameraOffset.y,
-    ballPos.z + cameraOffset.z
+  ballPos.x + cameraOffset.x,
+  ballPos.y + cameraOffset.y,
+  ballPos.z + cameraOffset.z,
   );
 
   camera.position.lerp(desiredPos, cameraSmoothness);
