@@ -11,8 +11,8 @@ let tempTransformation = undefined;
 const rigidBodies = [];
 const colGroupPlane = 1, colGroupRedBall = 2, colGroupGreenBall = 4;
 
-let cameraOffset = new THREE.Vector3(0, 20, 40);
-let cameraSmoothness = 0.05;
+const cameraOffset = new THREE.Vector3(0, 20, 40);
+const cameraSmoothness = 0.05;
 
 const keys = {
   w: false,
@@ -21,13 +21,13 @@ const keys = {
   d: false,
 };
 
-window.addEventListener("keydown", (event) => {
+globalThis.addEventListener("keydown", (event) => {
   if (event.key in keys) {
     keys[event.key] = true;
   }
 });
 
-window.addEventListener("keyup", (event) => {
+globalThis.addEventListener("keyup", (event) => {
   if (event.key in keys) {
     keys[event.key] = false;
   }
@@ -124,7 +124,7 @@ function renderFrame() {
 
 function createBlock() {
   const pos = { x: 0, y: 0, z: 0 },
-    scale = { x: 500, y: 1, z: 500},
+    scale = { x: 500, y: 1, z: 500 },
     quat = { x: 0, y: 0, z: 0, w: 1 },
     mass = 0;
 
@@ -212,11 +212,10 @@ function createBall() {
   ball.userData.physicsBody = body;
   rigidBodies.push(ball);
 
-  window.playerBall = body;
+  globalThis.playerBall = body;
 }
 
 function playerControls() {
-  const Maxspeed = 25;
   const acceleration = 80;
   const force = new Ammo.btVector3(0, 0, 0);
 
@@ -225,19 +224,17 @@ function playerControls() {
   if (keys.a) force.setX(-acceleration);
   if (keys.d) force.setX(acceleration);
 
-  window.playerBall.applyCentralForce(force);
-
+  globalThis.playerBall.applyCentralForce(force);
 }
 
 function updateCameraFollow() {
-  if (!window.playerBall) return;
-
+  if (!globalThis.playerBall) return;
   const ballPos = rigidBodies[0].position;
 
   const desiredPos = new THREE.Vector3(
-  ballPos.x + cameraOffset.x,
-  ballPos.y + cameraOffset.y,
-  ballPos.z + cameraOffset.z,
+    ballPos.x + cameraOffset.x,
+    ballPos.y + cameraOffset.y,
+    ballPos.z + cameraOffset.z,
   );
 
   camera.position.lerp(desiredPos, cameraSmoothness);
