@@ -22,9 +22,9 @@ The tools that we expect to use within the project are [VSCode](https://code.vis
 We do not plan to heavily rely on GenAI or any agentic tools for this project. However, we may use GenAI like [BayLeaf’s Brace](https://bayleaf.chat/?model=brace-85291) for debugging purposes and/or give us tips on how to implement certain aspects and refactoring. It has been proven effective for analyzing TypeScript/JavaScript code and helpful for debugging Demo assignment code.
 
 ## Outlook
-We believe the hardest part is definitely learning about how the [three.js](https://threejs.org/) and [ammo.js](https://github.com/kripken/ammo.js)libraries and how they both function and correlate with one another, given how little time we have. We believe that by approaching the project with the tools and materials we selected above, we will learn how to develop more flexibly and how to manage our time consumption, as well as reserving ourselves to what we want to implement into the game. We will also learn when to cut our losses due to the time constraints.
+We believe the hardest part is definitely learning about how the [three.js](https://threejs.org/) and [ammo.js](https://github.com/kripken/ammo.js) libraries and how they both function and correlate with one another, given how little time we have. We believe that by approaching the project with the tools and materials we selected above, we will learn how to develop more flexibly and how to manage our time consumption, as well as reserving ourselves to what we want to implement into the game. We will also learn when to cut our losses due to the time constraints.
 
-# Devlog Entry [11/21/25]
+# Devlog Entry - [11/21/25]
 
 ## How we Satisfied the Software Requirements
 
