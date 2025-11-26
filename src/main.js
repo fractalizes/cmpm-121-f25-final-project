@@ -12,6 +12,8 @@ import {
   initPhysicsWorld,
 } from "./initialization.js";
 
+// Variables:
+
 let physicsWorld, scene, camera, renderer, clock;
 let tempTransformation = undefined;
 let cbContactResult,
@@ -41,6 +43,12 @@ const FLAGS = { CF_KINEMATIC_OBJ: 2 };
 const cameraOffset = new THREE.Vector3(0, 20, 40);
 const cameraSmoothness = 0.05;
 
+let equipableBalls = [];
+export const canShoot = { value: false };
+canShoot.value = false;
+
+let checkBallHit = false;
+
 // initialize ammo
 Ammo().then(start);
 
@@ -57,6 +65,7 @@ function start() {
   createPlayer();
   createKinematicBox();
   createPuzzleBox();
+  createEquiableBalls();
 
   cbContactResult = initContactResultCallback();
   cbContactPairResult = initContactPairResultCallback();
@@ -79,6 +88,8 @@ function renderFrame() {
   // recursion to keep updating every frame
   requestAnimationFrame(renderFrame);
 }
+
+// Objects in the gameworld
 
 function createGround() {
   const pos = { x: 0, y: 0, z: 0 },
@@ -279,6 +290,23 @@ function createBall(pos, radius, quat, mass, color) {
   return { ball, body };
 }
 
+function createEquiableBalls() {
+  const ballGeo = new THREE.SphereGeometry(2);
+  const ballMesh = new THREE.MeshPhongMaterial({ color: 0x00aaff });
+
+  for (let i = 0; i < 3; i++) {
+    const ball = new THREE.Mesh(ballGeo, ballMesh.clone());
+    ball.position.set(10 * i, 3, -10);
+    ball.castShadow = true;
+    ball.receiveShadow = true;
+
+    scene.add(ball);
+    equipableBalls.push(ball);
+  }
+}
+
+// Core Game logic:
+
 function movePlayer() {
   if (!playerBody) return;
 
@@ -307,6 +335,39 @@ function updateCameraFollow() {
   camera.lookAt(ballPos);
 }
 
+export function clickEquipBalls(event) {
+  mouseCoords.set(
+    (event.clientX / globalThis.innerWidth) * 2 - 1,
+    -(event.clientY / globalThis.innerHeight) * 2 + 1,
+  );
+
+  raycaster.setFromCamera(mouseCoords, camera);
+
+  const hit = raycaster.intersectObjects(equipableBalls, true);
+
+  if (hit.length > 0) {
+    const clicked = hit[0].object;
+
+    canShoot.value = true;
+    console.log("Ball Clicked!");
+
+    scene.remove(clicked);
+
+    for (let i = 0; i < equipableBalls.length; i++) {
+      if (equipableBalls[i] === clicked) {
+        equipableBalls[i] = equipableBalls[equipableBalls.length - 1];
+        equipableBalls.length--;
+        console.log("ball removed");
+        break;
+      }
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
 function updatePhysics(deltaTime) {
   // advance a "step" in the world
   physicsWorld.stepSimulation(deltaTime, 10);
@@ -333,23 +394,32 @@ function checkContact() {
 }
 
 function blockHitsFloor() {
-  cbContactPairResult.hasContact = false;
-  physicsWorld.contactPairTest(
-    puzzleBlock.userData.physicsBody,
-    groundBlock.userData.physicsBody,
-    cbContactPairResult,
-  );
-  if (!cbContactPairResult.hasContact) {
-    if (numBalls > 0) return;
-    globalThis.alert(
-      "you have lost, you have not knocked down the orange cube and ran out of balls :(",
-    );
-  } else {
-    globalThis.alert(
-      "you have successfully knocked down the orange cube! :D",
-    );
+  if (checkBallHit) return;
+
+  if (numBalls === 0) {
+    checkBallHit = true;
+    setTimeout(() => {
+      cbContactPairResult.hasContact = false;
+      physicsWorld.contactPairTest(
+        puzzleBlock.userData.physicsBody,
+        groundBlock.userData.physicsBody,
+        cbContactPairResult,
+      );
+
+      if (!cbContactPairResult.hasContact) {
+        if (numBalls > 0) return;
+        globalThis.alert(
+          "you have lost, you have not knocked down the orange cube and ran out of balls :(",
+        );
+      } else {
+        globalThis.alert(
+          "you have successfully knocked down the orange cube! :D",
+        );
+      }
+
+      popUp = true;
+    }, 3000);
   }
-  popUp = true;
 }
 
 export function shoot(event) {
