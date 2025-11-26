@@ -396,8 +396,23 @@ function checkContact() {
 function blockHitsFloor() {
   if (checkBallHit) return;
 
+  cbContactPairResult.hasContact = false;
+  physicsWorld.contactPairTest(
+    puzzleBlock.userData.physicsBody,
+    groundBlock.userData.physicsBody,
+    cbContactPairResult,
+  );
+
+  if (cbContactPairResult.hasContact) {
+    checkBallHit = true;
+    popUp = true;
+    globalThis.alert("you have successfully knocked down the orange cube! :D");
+    return;
+  }
+
   if (numBalls === 0) {
     checkBallHit = true;
+
     setTimeout(() => {
       cbContactPairResult.hasContact = false;
       physicsWorld.contactPairTest(
@@ -410,10 +425,6 @@ function blockHitsFloor() {
         if (numBalls > 0) return;
         globalThis.alert(
           "you have lost, you have not knocked down the orange cube and ran out of balls :(",
-        );
-      } else {
-        globalThis.alert(
-          "you have successfully knocked down the orange cube! :D",
         );
       }
 
