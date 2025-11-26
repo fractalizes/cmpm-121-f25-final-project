@@ -43,7 +43,7 @@ const FLAGS = { CF_KINEMATIC_OBJ: 2 };
 const cameraOffset = new THREE.Vector3(0, 20, 40);
 const cameraSmoothness = 0.05;
 
-let equipableBalls = [];
+const equipableBalls = [];
 export const canShoot = { value: false };
 canShoot.value = false;
 
