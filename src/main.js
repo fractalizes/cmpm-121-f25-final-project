@@ -43,7 +43,7 @@ const FLAGS = { CF_KINEMATIC_OBJ: 2 };
 const cameraOffset = new THREE.Vector3(0, 20, 40);
 const cameraSmoothness = 0.05;
 
-const equipableBalls = [];
+const equippableBalls = [];
 export const canShoot = { value: false };
 canShoot.value = false;
 
@@ -65,7 +65,7 @@ function start() {
   createPlayer();
   createKinematicBox();
   createPuzzleBox();
-  createEquiableBalls();
+  createEquippableBalls();
   createRoom();
 
   cbContactResult = initContactResultCallback();
@@ -350,18 +350,34 @@ function createBall(pos, radius, quat, mass, color) {
   return { ball, body };
 }
 
-function createEquiableBalls() {
-  const ballGeo = new THREE.SphereGeometry(2);
-  const ballMesh = new THREE.MeshPhongMaterial({ color: 0x00aaff });
+function createEquippableBalls() {
+  const numEquipBalls = 8;           
+  const radius = 2;
+  const height = 3;
+  const color = 0x00aaff;
 
-  for (let i = 0; i < 3; i++) {
-    const ball = new THREE.Mesh(ballGeo, ballMesh.clone());
-    ball.position.set(10 * i, 3, -10);
-    ball.castShadow = true;
-    ball.receiveShadow = true;
+  const roomSize = 500;
+  const wallPadding = 20;             
 
-    scene.add(ball);
-    equipableBalls.push(ball);
+  for (let i = 0; i < numEquipBalls; i++) {
+    const angle = (i / numEquipBalls) * Math.PI * 2;
+
+    const r = (roomSize / 2) - wallPadding;
+
+    const x = Math.cos(angle) * r;
+    const z = Math.sin(angle) * r;
+    const pos = { x, y: height, z };
+
+    const quat = { x: 0, y: 0, z: 0, w: 1 };
+    const mass = 0;
+
+    const { ball, body } = createBall(pos, radius, quat, mass, color);
+
+    physicsWorld.addRigidBody(body);
+    ball.userData.physicsBody = body;
+
+    equippableBalls.push(ball);
+    rigidBodies.push(ball);           
   }
 }
 
@@ -403,7 +419,7 @@ export function clickEquipBalls(event) {
 
   raycaster.setFromCamera(mouseCoords, camera);
 
-  const hit = raycaster.intersectObjects(equipableBalls, true);
+  const hit = raycaster.intersectObjects(equippableBalls, true);
 
   if (hit.length > 0) {
     const clicked = hit[0].object;
@@ -413,10 +429,10 @@ export function clickEquipBalls(event) {
 
     scene.remove(clicked);
 
-    for (let i = 0; i < equipableBalls.length; i++) {
-      if (equipableBalls[i] === clicked) {
-        equipableBalls[i] = equipableBalls[equipableBalls.length - 1];
-        equipableBalls.length--;
+    for (let i = 0; i < equippableBalls.length; i++) {
+      if (equippableBalls[i] === clicked) {
+        equippableBalls[i] = equippableBalls[equippableBalls.length - 1];
+        equippableBalls.length--;
         console.log("ball removed");
         break;
       }
