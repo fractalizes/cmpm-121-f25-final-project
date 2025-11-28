@@ -66,6 +66,7 @@ function start() {
   createKinematicBox();
   createPuzzleBox();
   createEquiableBalls();
+  createRoom();
 
   cbContactResult = initContactResultCallback();
   cbContactPairResult = initContactPairResultCallback();
@@ -239,6 +240,65 @@ function createPuzzleBox() {
   puzzleBlock.userData.physicsBody = puzzleBody;
   rigidBodies.push(puzzleBlock);
 }
+
+function createRoom() {
+  const roomSize = 500;
+  const wallHeight = 80;
+  const wallThickness = 5;
+
+  {
+    const pos = { x: -roomSize / 2, y: wallHeight / 2, z: 0 };
+    const scale = { x: wallThickness, y: wallHeight, z: roomSize };
+    const quat = { x: 0, y: 0, z: 0, w: 1 };
+    const mass = 0;
+    const color = 0x444444;
+
+    const { block, body } = createBlock(pos, scale, quat, mass, color);
+    body.setFriction(4);
+    physicsWorld.addRigidBody(body);
+    block.userData.physicsBody = body;
+  }
+
+  {
+    const pos = { x: roomSize / 2, y: wallHeight / 2, z: 0 };
+    const scale = { x: wallThickness, y: wallHeight, z: roomSize };
+    const quat = { x: 0, y: 0, z: 0, w: 1 };
+    const mass = 0;
+    const color = 0x444444;
+
+    const { block, body } = createBlock(pos, scale, quat, mass, color);
+    body.setFriction(4);
+    physicsWorld.addRigidBody(body);
+    block.userData.physicsBody = body;
+  }
+
+  {
+    const pos = { x: 0, y: wallHeight / 2, z: -roomSize / 2 };
+    const scale = { x: roomSize, y: wallHeight, z: wallThickness };
+    const quat = { x: 0, y: 0, z: 0, w: 1 };
+    const mass = 0;
+    const color = 0x444444;
+
+    const { block, body } = createBlock(pos, scale, quat, mass, color);
+    body.setFriction(4);
+    physicsWorld.addRigidBody(body);
+    block.userData.physicsBody = body;
+  }
+
+  {
+    const pos = { x: 0, y: wallHeight / 2, z: roomSize / 2 };
+    const scale = { x: roomSize, y: wallHeight, z: wallThickness };
+    const quat = { x: 0, y: 0, z: 0, w: 1 };
+    const mass = 0;
+    const color = 0x444444;
+
+    const { block, body } = createBlock(pos, scale, quat, mass, color);
+    body.setFriction(4);
+    physicsWorld.addRigidBody(body);
+    block.userData.physicsBody = body;
+  }
+}
+
 
 function createBall(pos, radius, quat, mass, color) {
   const ball = new THREE.Mesh(
