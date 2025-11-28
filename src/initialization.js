@@ -1,5 +1,5 @@
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js";
-import { canShoot, clickEquipBalls, shoot } from "./main.js";
+import { canShoot, clickEquipBalls, numBalls, shoot } from "./main.js";
 
 export function initPhysicsWorld() {
   const collisionConfiguration = new Ammo.btDefaultCollisionConfiguration(),
@@ -76,11 +76,13 @@ export function initEventHandlers() {
   globalThis.addEventListener("mousedown", (event) => {
     const equipped = clickEquipBalls(event);
 
-    if (equipped) return;
+    if (equipped) {
+      canShoot.value = true;
+      return;
+    }
 
-    if (canShoot.value) {
+    if (canShoot.value && numBalls > 0) {
       shoot(event);
-      canShoot.value = false;
     }
   }, false);
 

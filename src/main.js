@@ -26,7 +26,7 @@ let playerBall = null,
     s: false,
     d: false,
   },
-  numBalls = 3,
+  ballsUsed = 0,
   popUp = false;
 let puzzleBlock = null,
   puzzleBody = null;
@@ -46,8 +46,21 @@ const cameraSmoothness = 0.05;
 const equippableBalls = [];
 export const canShoot = { value: false };
 canShoot.value = false;
+export let numBalls = 0;
+const totalBalls = 8;
 
 let checkBallHit = false;
+
+// UI elements:
+
+const ballCounterDiv = document.createElement("div");
+ballCounterDiv.id = "ballCounter";
+ballCounterDiv.textContent = "Balls: 0";
+document.body.append(ballCounterDiv);
+
+function updateBallCounter() {
+  ballCounterDiv.textContent = "Balls: " + numBalls;
+}
 
 // initialize ammo
 Ammo().then(start);
@@ -67,6 +80,7 @@ function start() {
   createPuzzleBox();
   createEquippableBalls();
   createRoom();
+  updateBallCounter();
 
   cbContactResult = initContactResultCallback();
   cbContactPairResult = initContactPairResultCallback();
@@ -90,7 +104,7 @@ function renderFrame() {
   requestAnimationFrame(renderFrame);
 }
 
-// Objects in the gameworld
+// Objects in the gameworld:
 
 function createGround() {
   const pos = { x: 0, y: 0, z: 0 },
@@ -433,6 +447,8 @@ export function clickEquipBalls(event) {
         equippableBalls[i] = equippableBalls[equippableBalls.length - 1];
         equippableBalls.length--;
         console.log("ball removed");
+        numBalls++;
+        updateBallCounter();
         break;
       }
     }
@@ -469,8 +485,6 @@ function checkContact() {
 }
 
 function blockHitsFloor() {
-  if (checkBallHit) return;
-
   cbContactPairResult.hasContact = false;
   physicsWorld.contactPairTest(
     puzzleBlock.userData.physicsBody,
@@ -485,10 +499,10 @@ function blockHitsFloor() {
     return;
   }
 
-  if (numBalls === 0) {
-    checkBallHit = true;
-
+  if (!checkBallHit && numBalls === 0 && ballsUsed === totalBalls) {
     setTimeout(() => {
+      if (checkBallHit) return;
+
       cbContactPairResult.hasContact = false;
       physicsWorld.contactPairTest(
         puzzleBlock.userData.physicsBody,
@@ -497,7 +511,7 @@ function blockHitsFloor() {
       );
 
       if (!cbContactPairResult.hasContact) {
-        if (numBalls > 0) return;
+        checkBallHit = true;
         globalThis.alert(
           "you have lost, you have not knocked down the orange cube and ran out of balls :(",
         );
@@ -537,4 +551,6 @@ export function shoot(event) {
   rigidBodies.push(ball);
 
   numBalls--;
+  ballsUsed++;
+  updateBallCounter();
 }
