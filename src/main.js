@@ -299,7 +299,6 @@ function createRoom() {
   }
 }
 
-
 function createBall(pos, radius, quat, mass, color) {
   const ball = new THREE.Mesh(
     new THREE.SphereGeometry(radius),
@@ -351,13 +350,13 @@ function createBall(pos, radius, quat, mass, color) {
 }
 
 function createEquippableBalls() {
-  const numEquipBalls = 8;           
+  const numEquipBalls = 8;
   const radius = 2;
   const height = 3;
   const color = 0x00aaff;
 
   const roomSize = 500;
-  const wallPadding = 20;             
+  const wallPadding = 20;
 
   for (let i = 0; i < numEquipBalls; i++) {
     const angle = (i / numEquipBalls) * Math.PI * 2;
@@ -377,7 +376,7 @@ function createEquippableBalls() {
     ball.userData.physicsBody = body;
 
     equippableBalls.push(ball);
-    rigidBodies.push(ball);           
+    rigidBodies.push(ball);
   }
 }
 
