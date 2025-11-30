@@ -516,7 +516,7 @@ function doorCollision() {
     cbContactPairResult,
   );
 
-  if (cbContactPairResult.hasContact) {
+  if (cbContactPairResult.hasContact && currentRoom === 1) {
     switchToRoom2();
   }
 }
