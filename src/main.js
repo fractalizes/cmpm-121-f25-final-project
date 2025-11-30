@@ -32,6 +32,9 @@ let puzzleBlock = null,
   puzzleBody = null;
 let groundBlock = null;
 
+let currentRoom = 1;
+let doorBlock = null;
+
 const rigidBodies = [];
 const mouseCoords = new THREE.Vector2(),
   raycaster = new THREE.Raycaster(),
@@ -77,9 +80,10 @@ function start() {
   createGround();
   createPlayer();
   createKinematicBox();
-  createPuzzleBox();
+
   createEquippableBalls();
   createRoom();
+  createDoor();
   updateBallCounter();
 
   cbContactResult = initContactResultCallback();
@@ -93,6 +97,7 @@ function renderFrame() {
 
   movePlayer();
   checkContact();
+  doorCollision();
   if (!popUp) blockHitsFloor();
 
   updatePhysics(deltaTime);
@@ -313,6 +318,20 @@ function createRoom() {
   }
 }
 
+function createDoor() {
+  const pos = { x: 0, y: 20, z: -245 };
+  const scale = { x: 30, y: 40, z: 5 };
+  const quat = { x: 0, y: 0, z: 0, w: 1 };
+  const mass = 0;
+  const color = 0x2244ff;
+
+  const { block, body } = createBlock(pos, scale, quat, mass, color);
+  doorBlock = block;
+  doorBlock.userData.physicsBody = body;
+  physicsWorld.addRigidBody(body);
+  rigidBodies.push(block);
+}
+
 function createBall(pos, radius, quat, mass, color) {
   const ball = new THREE.Mesh(
     new THREE.SphereGeometry(radius),
@@ -436,11 +455,13 @@ export function clickEquipBalls(event) {
 
   if (hit.length > 0) {
     const clicked = hit[0].object;
+    const body = clicked.userData.physicsBody;
 
     canShoot.value = true;
     console.log("Ball Clicked!");
 
     scene.remove(clicked);
+    physicsWorld.removeRigidBody(body);
 
     for (let i = 0; i < equippableBalls.length; i++) {
       if (equippableBalls[i] === clicked) {
@@ -484,7 +505,25 @@ function checkContact() {
   physicsWorld.contactTest(playerBall.userData.physicsBody, cbContactResult);
 }
 
+function doorCollision() {
+  if (!doorBlock) return;
+
+  cbContactPairResult.hasContact = false;
+
+  physicsWorld.contactPairTest(
+    playerBall.userData.physicsBody,
+    doorBlock.userData.physicsBody,
+    cbContactPairResult,
+  );
+
+  if (cbContactPairResult.hasContact) {
+    switchToRoom2();
+  }
+}
+
 function blockHitsFloor() {
+  if (!puzzleBlock) return;
+
   cbContactPairResult.hasContact = false;
   physicsWorld.contactPairTest(
     puzzleBlock.userData.physicsBody,
@@ -553,4 +592,31 @@ export function shoot(event) {
   numBalls--;
   ballsUsed++;
   updateBallCounter();
+}
+
+function switchToRoom2() {
+  currentRoom = 2;
+  popUp = false;
+  checkBallHit = false;
+
+  for (let i = rigidBodies.length - 1; i >= 0; i--) {
+    const obj = rigidBodies[i];
+    if (obj !== playerBall) {
+      scene.remove(obj);
+      physicsWorld.removeRigidBody(obj.userData.physicsBody);
+      rigidBodies.splice(i, 1);
+    }
+  }
+
+  createRoom();
+
+  puzzleBlock = null;
+  puzzleBody = null;
+  createPuzzleBox();
+  playerBall.position.set(0, 20, 0);
+  const transform = playerBody.getWorldTransform();
+  transform.setOrigin(new Ammo.btVector3(0, 20, 0));
+  playerBody.setWorldTransform(transform);
+
+  console.log("Switched to room 2, balls owned: ", numBalls);
 }
