@@ -12,7 +12,9 @@ import {
   initPhysicsWorld,
 } from "./initialization.js";
 
-// Variables:
+// ----------------------------------- //
+// ---          VARIABLES          --- //
+// ----------------------------------- //
 
 let physicsWorld, scene, camera, renderer, clock;
 let tempTransformation = undefined;
@@ -20,7 +22,7 @@ let cbContactResult,
   cbContactPairResult;
 let playerBall = null,
   playerBody = null,
-  keys = {
+  _keys = {
     w: false,
     a: false,
     s: false,
@@ -32,6 +34,7 @@ let puzzleBlock = null,
   puzzleBody = null;
 let groundBlock = null;
 
+let moveTarget = null;
 let currentRoom = 1;
 let doorBlock = null;
 
@@ -54,7 +57,9 @@ const totalBalls = 8;
 
 let checkBallHit = false;
 
-// UI elements:
+// ----------------------------------- //
+// ---         UI ELEMENTS         --- //
+// ----------------------------------- //
 
 const ballCounterDiv = document.createElement("div");
 ballCounterDiv.id = "ballCounter";
@@ -73,7 +78,7 @@ function start() {
 
   // initialize ammo environment configurations
   physicsWorld = initPhysicsWorld();
-  keys = initEventHandlers();
+  _keys = initEventHandlers();
   const { scene: s, camera: c, renderer: r, clock: k } = initGraphics();
   scene = s, camera = c, renderer = r, clock = k;
 
@@ -109,7 +114,9 @@ function renderFrame() {
   requestAnimationFrame(renderFrame);
 }
 
-// Objects in the gameworld:
+// ----------------------------------- //
+// ---      GAMEWORLD OBJECTS      --- //
+// ----------------------------------- //
 
 function createGround() {
   const pos = { x: 0, y: 0, z: 0 },
@@ -413,20 +420,32 @@ function createEquippableBalls() {
   }
 }
 
-// Core Game logic:
+// ----------------------------------- //
+// ---       CORE GAME LOGIC       --- //
+// ----------------------------------- //
 
 function movePlayer() {
-  if (!playerBody) return;
+  if (!playerBody || !playerBall || !moveTarget) return;
 
-  const acceleration = 80;
-  const force = new Ammo.btVector3(0, 0, 0);
+  const currentPos = playerBall.position;
+  const direction = moveTarget.clone().sub(currentPos).setY(0);
 
-  if (keys.w) force.setZ(-acceleration);
-  if (keys.s) force.setZ(acceleration);
-  if (keys.a) force.setX(-acceleration);
-  if (keys.d) force.setX(acceleration);
+  // when close enough to target location
+  if (direction.lengthSq() < 1) {
+    moveTarget = null;
+    playerBody.setLinearVelocity(new Ammo.btVector3(0, 0, 0));
+    return;
+  }
+  direction.normalize();
 
-  playerBody.applyCentralForce(force);
+  const speed = 20;
+  const velocity = new Ammo.btVector3(
+    direction.x * speed,
+    0,
+    direction.z * speed,
+  );
+
+  playerBody.setLinearVelocity(velocity);
 }
 
 function updateCameraFollow() {
@@ -448,7 +467,6 @@ export function clickEquipBalls(event) {
     (event.clientX / globalThis.innerWidth) * 2 - 1,
     -(event.clientY / globalThis.innerHeight) * 2 + 1,
   );
-
   raycaster.setFromCamera(mouseCoords, camera);
 
   const hit = raycaster.intersectObjects(equippableBalls, true);
@@ -478,6 +496,23 @@ export function clickEquipBalls(event) {
   }
 
   return false;
+}
+
+export function clickMovePlayer(event) {
+  mouseCoords.set(
+    (event.clientX / globalThis.innerWidth) * 2 - 1,
+    -(event.clientY / globalThis.innerHeight) * 2 + 1,
+  );
+  raycaster.setFromCamera(mouseCoords, camera);
+
+  const groundPlane = new THREE.Plane(
+    new THREE.Vector3(0, 1, 0),
+    groundBlock.position.y,
+  );
+  const intersection = new THREE.Vector3();
+
+  if (!raycaster.ray.intersectPlane(groundPlane, intersection)) return;
+  moveTarget = intersection.clone();
 }
 
 function updatePhysics(deltaTime) {

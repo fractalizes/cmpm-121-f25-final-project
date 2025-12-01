@@ -1,5 +1,11 @@
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js";
-import { canShoot, clickEquipBalls, numBalls, shoot } from "./main.js";
+import {
+  canShoot,
+  clickEquipBalls,
+  clickMovePlayer,
+  numBalls,
+  shoot,
+} from "./main.js";
 
 export function initPhysicsWorld() {
   const collisionConfiguration = new Ammo.btDefaultCollisionConfiguration(),
@@ -70,8 +76,10 @@ export function initGraphics() {
 }
 
 export function initEventHandlers() {
+  /*
   globalThis.addEventListener("keydown", handleKeyDown, false);
   globalThis.addEventListener("keyup", handleKeyUp, false);
+  */
 
   globalThis.addEventListener("mousedown", (event) => {
     const equipped = clickEquipBalls(event);
@@ -79,6 +87,8 @@ export function initEventHandlers() {
     if (equipped) {
       canShoot.value = true;
       return;
+    } else {
+      clickMovePlayer(event);
     }
 
     if (canShoot.value && numBalls > 0) {
@@ -86,12 +96,15 @@ export function initEventHandlers() {
     }
   }, false);
 
+  /*
   const keys = {
+    Space: false,
     w: false,
     a: false,
     s: false,
     d: false,
   };
+
 
   function handleKeyDown(event) {
     if (event.key in keys) keys[event.key] = true;
@@ -102,6 +115,7 @@ export function initEventHandlers() {
   }
 
   return keys;
+  */
 }
 
 export function initContactResultCallback() {
@@ -120,25 +134,27 @@ export function initContactResultCallback() {
     const distance = contactPoint.getDistance();
     if (distance > 0) return;
 
-    // const colWrapper0 = Ammo.wrapPointer(
-    //   colObj0Wrap,
-    //   Ammo.btCollisionObjectWrapper,
-    // );
-    // const rb0 = Ammo.castObject(
-    //   colWrapper0.getCollisionObject(),
-    //   Ammo.btRigidBody,
-    // );
+    /*
+    const colWrapper0 = Ammo.wrapPointer(
+      colObj0Wrap,
+      Ammo.btCollisionObjectWrapper,
+    );
+    const rb0 = Ammo.castObject(
+      colWrapper0.getCollisionObject(),
+      Ammo.btRigidBody,
+    );
 
-    // const colWrapper1 = Ammo.wrapPointer(
-    //   colObj1Wrap,
-    //   Ammo.btCollisionObjectWrapper,
-    // );
-    // const rb1 = Ammo.castObject(
-    //   colWrapper1.getCollisionObject(),
-    //   Ammo.btRigidBody,
-    // );
+    const colWrapper1 = Ammo.wrapPointer(
+      colObj1Wrap,
+      Ammo.btCollisionObjectWrapper,
+    );
+    const rb1 = Ammo.castObject(
+      colWrapper1.getCollisionObject(),
+      Ammo.btRigidBody,
+    );
 
-    // console.log(rb0, rb1);
+    console.log(rb0, rb1);
+    */
   };
   return cbContactResult;
 }
