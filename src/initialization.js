@@ -112,6 +112,7 @@ export function initEventHandlers() {
     d: false,
   };
 
+
   function handleKeyDown(event) {
     if (event.key in keys) keys[event.key] = true;
   }

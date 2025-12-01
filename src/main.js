@@ -630,6 +630,7 @@ export function shoot() {
     new Ammo.btVector3(aimTarget.x, aimTarget.y, aimTarget.z),
   );
 
+  physicsWorld.addRigidBody(body);
   ball.userData.physicsBody = body;
   rigidBodies.push(ball);
 
