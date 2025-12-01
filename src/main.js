@@ -22,12 +22,12 @@ let cbContactResult,
   cbContactPairResult;
 let playerBall = null,
   playerBody = null,
-  _keys = {
+  /*keys = {
     w: false,
     a: false,
     s: false,
     d: false,
-  },
+  },*/
   ballsUsed = 0,
   popUp = false;
 let puzzleBlock = null,
@@ -41,7 +41,7 @@ let doorBlock = null;
 const rigidBodies = [];
 const mouseCoords = new THREE.Vector2(),
   raycaster = new THREE.Raycaster(),
-  tempPos = new THREE.Vector3();
+  aimTarget = new THREE.Vector3();
 
 const STATE = { DISABLE_DEACTIVATION: 4 };
 const FLAGS = { CF_KINEMATIC_OBJ: 2 };
@@ -78,9 +78,9 @@ function start() {
 
   // initialize ammo environment configurations
   physicsWorld = initPhysicsWorld();
-  _keys = initEventHandlers();
   const { scene: s, camera: c, renderer: r, clock: k } = initGraphics();
   scene = s, camera = c, renderer = r, clock = k;
+  initEventHandlers();
 
   createGround();
   createPlayer();
@@ -498,6 +498,24 @@ export function clickEquipBalls(event) {
   return false;
 }
 
+export function updateAimTarget(event) {
+  mouseCoords.set(
+    (event.clientX / globalThis.innerWidth) * 2 - 1,
+    -(event.clientY / globalThis.innerHeight) * 2 + 1,
+  );
+  raycaster.setFromCamera(mouseCoords, camera);
+
+  const groundPlane = new THREE.Plane(
+    new THREE.Vector3(0, 1, 0),
+    groundBlock.position.y,
+  );
+  const intersection = new THREE.Vector3();
+
+  if (!raycaster.ray.intersectPlane(groundPlane, intersection)) return;
+  aimTarget.copy(raycaster.ray.direction);
+  aimTarget.add(raycaster.ray.origin);
+}
+
 export function clickMovePlayer(event) {
   mouseCoords.set(
     (event.clientX / globalThis.innerWidth) * 2 - 1,
@@ -596,18 +614,10 @@ function blockHitsFloor() {
   }
 }
 
-export function shoot(event) {
-  mouseCoords.set(
-    (event.clientX / globalThis.innerWidth) * 2 - 1,
-    -(event.clientY / globalThis.innerHeight) * 2 + 1,
-  );
+export function shoot() {
+  if (!canShoot.value || numBalls <= 0) return;
 
-  raycaster.setFromCamera(mouseCoords, camera);
-
-  tempPos.copy(raycaster.ray.direction);
-  tempPos.add(raycaster.ray.origin);
-
-  const pos = { x: tempPos.x, y: tempPos.y, z: tempPos.z },
+  const pos = { x: aimTarget.x, y: aimTarget.y, z: aimTarget.z },
     radius = 1,
     quat = { x: 0, y: 0, z: 0, w: 1 },
     mass = 1,
@@ -616,11 +626,14 @@ export function shoot(event) {
   const { ball: ball, body: body } = createBall(pos, radius, quat, mass, color);
   physicsWorld.addRigidBody(body);
 
-  tempPos.copy(raycaster.ray.direction);
-  tempPos.multiplyScalar(100);
+  aimTarget.copy(raycaster.ray.direction);
+  aimTarget.multiplyScalar(100);
 
-  body.setLinearVelocity(new Ammo.btVector3(tempPos.x, tempPos.y, tempPos.z));
+  body.setLinearVelocity(
+    new Ammo.btVector3(aimTarget.x, aimTarget.y, aimTarget.z),
+  );
 
+  physicsWorld.addRigidBody(body);
   ball.userData.physicsBody = body;
   rigidBodies.push(ball);
 
