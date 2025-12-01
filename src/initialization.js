@@ -102,27 +102,6 @@ export function initEventHandlers() {
   globalThis.addEventListener("mousemove", (event) => {
     updateAimTarget(event);
   });
-
-  /*
-  const keys = {
-    Space: false,
-    w: false,
-    a: false,
-    s: false,
-    d: false,
-  };
-
-
-  function handleKeyDown(event) {
-    if (event.key in keys) keys[event.key] = true;
-  }
-
-  function handleKeyUp(event) {
-    if (event.key in keys) keys[event.key] = false;
-  }
-
-  return keys;
-  */
 }
 
 export function initContactResultCallback() {

@@ -22,12 +22,6 @@ let cbContactResult,
   cbContactPairResult;
 let playerBall = null,
   playerBody = null,
-  /*keys = {
-    w: false,
-    a: false,
-    s: false,
-    d: false,
-  },*/
   ballsUsed = 0,
   popUp = false;
 let puzzleBlock = null,
@@ -630,7 +624,6 @@ export function shoot() {
     new Ammo.btVector3(aimTarget.x, aimTarget.y, aimTarget.z),
   );
 
-  physicsWorld.addRigidBody(body);
   ball.userData.physicsBody = body;
   rigidBodies.push(ball);
 
