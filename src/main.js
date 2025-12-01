@@ -61,10 +61,6 @@ let checkBallHit = false;
 
 const ballCounterDiv = document.getElementById("ballCounter");
 
-function updateBallCounter() {
-  ballCounterDiv.textContent = "Balls: " + numBalls;
-}
-
 // initialize ammo
 Ammo().then(start);
 
@@ -158,6 +154,166 @@ function createPlayer() {
   rigidBodies.push(playerBall);
 }
 
+function createKinematicBox() {
+  const pos = { x: 40, y: 5, z: 5 },
+    scale = { x: 10, y: 10, z: 10 },
+    quat = { x: 0, y: 0, z: 0, w: 1 },
+    mass = 1,
+    color = 0x30ab78;
+
+  const { block: box, body: body } = createBlock(
+    pos,
+    scale,
+    quat,
+    mass,
+    color,
+  );
+
+  body.setActivationState(STATE.DISABLE_DEACTIVATION);
+  body.setCollisionFlags(FLAGS.CF_KINEMATIC_OBJ);
+
+  physicsWorld.addRigidBody(body);
+  box.userData.physicsBody = body;
+
+  return { box, body };
+}
+
+function createPuzzleBox() {
+  const pos = { x: 40, y: 10, z: 5 },
+    scale = { x: 5, y: 5, z: 5 },
+    quat = { x: 0, y: 0, z: 0, w: 1 },
+    mass = 1,
+    color = 0xff9500;
+
+  const { block: block, body: body } = createBlock(
+    pos,
+    scale,
+    quat,
+    mass,
+    color,
+  );
+  puzzleBlock = block, puzzleBody = body;
+
+  puzzleBody.setFriction(4);
+  puzzleBody.setRollingFriction(10);
+  puzzleBody.setActivationState(STATE.DISABLE_DEACTIVATION);
+
+  physicsWorld.addRigidBody(puzzleBody);
+
+  puzzleBlock.userData.physicsBody = puzzleBody;
+  rigidBodies.push(puzzleBlock);
+}
+
+function createRoom() {
+  const roomSize = 500,
+    wallHeight = 80,
+    wallThickness = 5;
+  const friction = 4;
+
+  {
+    const pos = { x: -roomSize / 2, y: wallHeight / 2, z: 0 },
+      scale = { x: wallThickness, y: wallHeight, z: roomSize },
+      quat = { x: 0, y: 0, z: 0, w: 1 },
+      mass = 0,
+      color = 0x444444;
+
+    const { block, body } = createBlock(pos, scale, quat, mass, color);
+    body.setFriction(friction);
+    physicsWorld.addRigidBody(body);
+    block.userData.physicsBody = body;
+  }
+
+  {
+    const pos = { x: roomSize / 2, y: wallHeight / 2, z: 0 },
+      scale = { x: wallThickness, y: wallHeight, z: roomSize },
+      quat = { x: 0, y: 0, z: 0, w: 1 },
+      mass = 0,
+      color = 0x444444;
+
+    const { block, body } = createBlock(pos, scale, quat, mass, color);
+    body.setFriction(friction);
+    physicsWorld.addRigidBody(body);
+    block.userData.physicsBody = body;
+  }
+
+  {
+    const pos = { x: 0, y: wallHeight / 2, z: -roomSize / 2 },
+      scale = { x: roomSize, y: wallHeight, z: wallThickness },
+      quat = { x: 0, y: 0, z: 0, w: 1 },
+      mass = 0,
+      color = 0x444444;
+
+    const { block, body } = createBlock(pos, scale, quat, mass, color);
+    body.setFriction(friction);
+    physicsWorld.addRigidBody(body);
+    block.userData.physicsBody = body;
+  }
+
+  {
+    const pos = { x: 0, y: wallHeight / 2, z: roomSize / 2 },
+      scale = { x: roomSize, y: wallHeight, z: wallThickness },
+      quat = { x: 0, y: 0, z: 0, w: 1 },
+      mass = 0,
+      color = 0x444444;
+
+    const { block, body } = createBlock(pos, scale, quat, mass, color);
+    body.setFriction(friction);
+    physicsWorld.addRigidBody(body);
+    block.userData.physicsBody = body;
+  }
+}
+
+function createDoor() {
+  const pos = { x: 0, y: 20, z: -245 },
+    scale = { x: 30, y: 40, z: 5 },
+    quat = { x: 0, y: 0, z: 0, w: 1 },
+    mass = 0,
+    color = 0x2244ff;
+
+  const { block, body } = createBlock(pos, scale, quat, mass, color);
+  doorBlock = block;
+  doorBlock.userData.physicsBody = body;
+  physicsWorld.addRigidBody(body);
+  rigidBodies.push(block);
+}
+
+function createEquippableBalls() {
+  const numEquipBalls = 8;
+  const radius = 2,
+    height = 3,
+    color = 0x00aaff;
+
+  const roomSize = 500,
+    wallPadding = 20;
+
+  for (let i = 0; i < numEquipBalls; i++) {
+    const angle = (i / numEquipBalls) * Math.PI * 2;
+
+    const r = (roomSize / 2) - wallPadding;
+
+    const x = Math.cos(angle) * r;
+    const z = Math.sin(angle) * r;
+    const pos = { x, y: height, z };
+
+    const quat = { x: 0, y: 0, z: 0, w: 1 };
+    const mass = 0;
+
+    const { ball, body } = createBall(pos, radius, quat, mass, color);
+
+    physicsWorld.addRigidBody(body);
+    ball.userData.physicsBody = body;
+
+    equippableBalls.push(ball);
+    rigidBodies.push(ball);
+  }
+}
+
+// ----------------------------------- //
+// ---                             --- //
+// ---           HELPERS           --- //
+// ---                             --- //
+// ----------------------------------- //
+
 function createBlock(pos, scale, quat, mass, color) {
   const block = new THREE.Mesh(
     new THREE.BoxGeometry(scale.x, scale.y, scale.z),
@@ -214,128 +370,6 @@ function createBlock(pos, scale, quat, mass, color) {
   return { block, body };
 }
 
-function createKinematicBox() {
-  const pos = { x: 40, y: 5, z: 5 },
-    scale = { x: 10, y: 10, z: 10 },
-    quat = { x: 0, y: 0, z: 0, w: 1 },
-    mass = 1,
-    color = 0x30ab78;
-
-  const { block: box, body: body } = createBlock(
-    pos,
-    scale,
-    quat,
-    mass,
-    color,
-  );
-
-  body.setActivationState(STATE.DISABLE_DEACTIVATION);
-  body.setCollisionFlags(FLAGS.CF_KINEMATIC_OBJ);
-
-  physicsWorld.addRigidBody(body);
-  box.userData.physicsBody = body;
-
-  return { box, body };
-}
-
-function createPuzzleBox() {
-  const pos = { x: 40, y: 10, z: 5 },
-    scale = { x: 5, y: 5, z: 5 },
-    quat = { x: 0, y: 0, z: 0, w: 1 },
-    mass = 1,
-    color = 0xff9500;
-
-  const { block: block, body: body } = createBlock(
-    pos,
-    scale,
-    quat,
-    mass,
-    color,
-  );
-  puzzleBlock = block, puzzleBody = body;
-
-  puzzleBody.setFriction(4);
-  puzzleBody.setRollingFriction(10);
-  puzzleBody.setActivationState(STATE.DISABLE_DEACTIVATION);
-
-  physicsWorld.addRigidBody(puzzleBody);
-
-  puzzleBlock.userData.physicsBody = puzzleBody;
-  rigidBodies.push(puzzleBlock);
-}
-
-function createRoom() {
-  const roomSize = 500;
-  const wallHeight = 80;
-  const wallThickness = 5;
-
-  {
-    const pos = { x: -roomSize / 2, y: wallHeight / 2, z: 0 },
-      scale = { x: wallThickness, y: wallHeight, z: roomSize },
-      quat = { x: 0, y: 0, z: 0, w: 1 },
-      mass = 0,
-      color = 0x444444;
-
-    const { block, body } = createBlock(pos, scale, quat, mass, color);
-    body.setFriction(4);
-    physicsWorld.addRigidBody(body);
-    block.userData.physicsBody = body;
-  }
-
-  {
-    const pos = { x: roomSize / 2, y: wallHeight / 2, z: 0 },
-      scale = { x: wallThickness, y: wallHeight, z: roomSize },
-      quat = { x: 0, y: 0, z: 0, w: 1 },
-      mass = 0,
-      color = 0x444444;
-
-    const { block, body } = createBlock(pos, scale, quat, mass, color);
-    body.setFriction(4);
-    physicsWorld.addRigidBody(body);
-    block.userData.physicsBody = body;
-  }
-
-  {
-    const pos = { x: 0, y: wallHeight / 2, z: -roomSize / 2 },
-      scale = { x: roomSize, y: wallHeight, z: wallThickness },
-      quat = { x: 0, y: 0, z: 0, w: 1 },
-      mass = 0,
-      color = 0x444444;
-
-    const { block, body } = createBlock(pos, scale, quat, mass, color);
-    body.setFriction(4);
-    physicsWorld.addRigidBody(body);
-    block.userData.physicsBody = body;
-  }
-
-  {
-    const pos = { x: 0, y: wallHeight / 2, z: roomSize / 2 },
-      scale = { x: roomSize, y: wallHeight, z: wallThickness },
-      quat = { x: 0, y: 0, z: 0, w: 1 },
-      mass = 0,
-      color = 0x444444;
-
-    const { block, body } = createBlock(pos, scale, quat, mass, color);
-    body.setFriction(4);
-    physicsWorld.addRigidBody(body);
-    block.userData.physicsBody = body;
-  }
-}
-
-function createDoor() {
-  const pos = { x: 0, y: 20, z: -245 },
-    scale = { x: 30, y: 40, z: 5 },
-    quat = { x: 0, y: 0, z: 0, w: 1 },
-    mass = 0,
-    color = 0x2244ff;
-
-  const { block, body } = createBlock(pos, scale, quat, mass, color);
-  doorBlock = block;
-  doorBlock.userData.physicsBody = body;
-  physicsWorld.addRigidBody(body);
-  rigidBodies.push(block);
-}
-
 function createBall(pos, radius, quat, mass, color) {
   const ball = new THREE.Mesh(
     new THREE.SphereGeometry(radius),
@@ -386,35 +420,13 @@ function createBall(pos, radius, quat, mass, color) {
   return { ball, body };
 }
 
-function createEquippableBalls() {
-  const numEquipBalls = 8;
-  const radius = 2;
-  const height = 3;
-  const color = 0x00aaff;
+function checkContact() {
+  // checks for contact between any object
+  physicsWorld.contactTest(playerBall.userData.physicsBody, cbContactResult);
+}
 
-  const roomSize = 500;
-  const wallPadding = 20;
-
-  for (let i = 0; i < numEquipBalls; i++) {
-    const angle = (i / numEquipBalls) * Math.PI * 2;
-
-    const r = (roomSize / 2) - wallPadding;
-
-    const x = Math.cos(angle) * r;
-    const z = Math.sin(angle) * r;
-    const pos = { x, y: height, z };
-
-    const quat = { x: 0, y: 0, z: 0, w: 1 };
-    const mass = 0;
-
-    const { ball, body } = createBall(pos, radius, quat, mass, color);
-
-    physicsWorld.addRigidBody(body);
-    ball.userData.physicsBody = body;
-
-    equippableBalls.push(ball);
-    rigidBodies.push(ball);
-  }
+function updateBallCounter() {
+  ballCounterDiv.textContent = "Balls: " + numBalls;
 }
 
 // ----------------------------------- //
@@ -427,7 +439,9 @@ function movePlayer() {
   if (!playerBody || !playerBall || !moveTarget) return;
 
   const currentPos = playerBall.position;
-  const direction = moveTarget.clone().sub(currentPos).setY(0);
+  const direction = moveTarget.clone().sub(currentPos).setY(
+    groundBlock.position.y,
+  );
 
   // when close enough to target location
   if (direction.lengthSq() < 1) {
@@ -490,10 +504,8 @@ export function clickEquipBalls(event) {
         break;
       }
     }
-
     return true;
   }
-
   return false;
 }
 
@@ -537,8 +549,8 @@ function updatePhysics(deltaTime) {
   physicsWorld.stepSimulation(deltaTime, 10);
 
   // update rigid bodies
-  for (let i = 0; i < rigidBodies.length; i++) {
-    const objThree = rigidBodies[i];
+  rigidBodies.forEach((body) => {
+    const objThree = body;
     const objAmmo = objThree.userData.physicsBody;
     const ms = objAmmo.getMotionState();
 
@@ -549,12 +561,7 @@ function updatePhysics(deltaTime) {
       objThree.position.set(p.x(), p.y(), p.z());
       objThree.quaternion.set(q.x(), q.y(), q.z(), q.w());
     }
-  }
-}
-
-// checks for contact between any object
-function checkContact() {
-  physicsWorld.contactTest(playerBall.userData.physicsBody, cbContactResult);
+  });
 }
 
 function doorCollision() {
