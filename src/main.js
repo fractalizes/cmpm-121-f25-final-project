@@ -13,7 +13,9 @@ import {
 } from "./initialization.js";
 
 // ----------------------------------- //
+// ---                             --- //
 // ---          VARIABLES          --- //
+// ---                             --- //
 // ----------------------------------- //
 
 let physicsWorld, scene, camera, renderer, clock;
@@ -52,7 +54,9 @@ const totalBalls = 8;
 let checkBallHit = false;
 
 // ----------------------------------- //
+// ---                             --- //
 // ---         UI ELEMENTS         --- //
+// ---                             --- //
 // ----------------------------------- //
 
 const ballCounterDiv = document.getElementById("ballCounter");
@@ -106,7 +110,9 @@ function renderFrame() {
 }
 
 // ----------------------------------- //
+// ---                             --- //
 // ---      GAMEWORLD OBJECTS      --- //
+// ---                             --- //
 // ----------------------------------- //
 
 function createGround() {
@@ -264,11 +270,11 @@ function createRoom() {
   const wallThickness = 5;
 
   {
-    const pos = { x: -roomSize / 2, y: wallHeight / 2, z: 0 };
-    const scale = { x: wallThickness, y: wallHeight, z: roomSize };
-    const quat = { x: 0, y: 0, z: 0, w: 1 };
-    const mass = 0;
-    const color = 0x444444;
+    const pos = { x: -roomSize / 2, y: wallHeight / 2, z: 0 },
+      scale = { x: wallThickness, y: wallHeight, z: roomSize },
+      quat = { x: 0, y: 0, z: 0, w: 1 },
+      mass = 0,
+      color = 0x444444;
 
     const { block, body } = createBlock(pos, scale, quat, mass, color);
     body.setFriction(4);
@@ -277,11 +283,11 @@ function createRoom() {
   }
 
   {
-    const pos = { x: roomSize / 2, y: wallHeight / 2, z: 0 };
-    const scale = { x: wallThickness, y: wallHeight, z: roomSize };
-    const quat = { x: 0, y: 0, z: 0, w: 1 };
-    const mass = 0;
-    const color = 0x444444;
+    const pos = { x: roomSize / 2, y: wallHeight / 2, z: 0 },
+      scale = { x: wallThickness, y: wallHeight, z: roomSize },
+      quat = { x: 0, y: 0, z: 0, w: 1 },
+      mass = 0,
+      color = 0x444444;
 
     const { block, body } = createBlock(pos, scale, quat, mass, color);
     body.setFriction(4);
@@ -290,11 +296,11 @@ function createRoom() {
   }
 
   {
-    const pos = { x: 0, y: wallHeight / 2, z: -roomSize / 2 };
-    const scale = { x: roomSize, y: wallHeight, z: wallThickness };
-    const quat = { x: 0, y: 0, z: 0, w: 1 };
-    const mass = 0;
-    const color = 0x444444;
+    const pos = { x: 0, y: wallHeight / 2, z: -roomSize / 2 },
+      scale = { x: roomSize, y: wallHeight, z: wallThickness },
+      quat = { x: 0, y: 0, z: 0, w: 1 },
+      mass = 0,
+      color = 0x444444;
 
     const { block, body } = createBlock(pos, scale, quat, mass, color);
     body.setFriction(4);
@@ -303,11 +309,11 @@ function createRoom() {
   }
 
   {
-    const pos = { x: 0, y: wallHeight / 2, z: roomSize / 2 };
-    const scale = { x: roomSize, y: wallHeight, z: wallThickness };
-    const quat = { x: 0, y: 0, z: 0, w: 1 };
-    const mass = 0;
-    const color = 0x444444;
+    const pos = { x: 0, y: wallHeight / 2, z: roomSize / 2 },
+      scale = { x: roomSize, y: wallHeight, z: wallThickness },
+      quat = { x: 0, y: 0, z: 0, w: 1 },
+      mass = 0,
+      color = 0x444444;
 
     const { block, body } = createBlock(pos, scale, quat, mass, color);
     body.setFriction(4);
@@ -317,11 +323,11 @@ function createRoom() {
 }
 
 function createDoor() {
-  const pos = { x: 0, y: 20, z: -245 };
-  const scale = { x: 30, y: 40, z: 5 };
-  const quat = { x: 0, y: 0, z: 0, w: 1 };
-  const mass = 0;
-  const color = 0x2244ff;
+  const pos = { x: 0, y: 20, z: -245 },
+    scale = { x: 30, y: 40, z: 5 },
+    quat = { x: 0, y: 0, z: 0, w: 1 },
+    mass = 0,
+    color = 0x2244ff;
 
   const { block, body } = createBlock(pos, scale, quat, mass, color);
   doorBlock = block;
@@ -412,7 +418,9 @@ function createEquippableBalls() {
 }
 
 // ----------------------------------- //
+// ---                             --- //
 // ---       CORE GAME LOGIC       --- //
+// ---                             --- //
 // ----------------------------------- //
 
 function movePlayer() {
