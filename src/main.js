@@ -61,10 +61,7 @@ let checkBallHit = false;
 // ---         UI ELEMENTS         --- //
 // ----------------------------------- //
 
-const ballCounterDiv = document.createElement("div");
-ballCounterDiv.id = "ballCounter";
-ballCounterDiv.textContent = "Balls: 0";
-document.body.append(ballCounterDiv);
+const ballCounterDiv = document.getElementById("ballCounter");
 
 function updateBallCounter() {
   ballCounterDiv.textContent = "Balls: " + numBalls;
@@ -633,7 +630,6 @@ export function shoot() {
     new Ammo.btVector3(aimTarget.x, aimTarget.y, aimTarget.z),
   );
 
-  physicsWorld.addRigidBody(body);
   ball.userData.physicsBody = body;
   rigidBodies.push(ball);
 

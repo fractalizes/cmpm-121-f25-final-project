@@ -99,11 +99,6 @@ export function initEventHandlers() {
     }
   }, false);
 
-  const clientCoords = {
-    x: null,
-    y: null,
-  };
-
   globalThis.addEventListener("mousemove", (event) => {
     updateAimTarget(event);
   });
@@ -116,7 +111,6 @@ export function initEventHandlers() {
     s: false,
     d: false,
   };
-
 
   function handleKeyDown(event) {
     if (event.key in keys) keys[event.key] = true;
