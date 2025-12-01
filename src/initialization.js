@@ -3,8 +3,8 @@ import {
   canShoot,
   clickEquipBalls,
   clickMovePlayer,
-  numBalls,
   shoot,
+  updateAimTarget,
 } from "./main.js";
 
 export function initPhysicsWorld() {
@@ -90,11 +90,23 @@ export function initEventHandlers() {
     } else {
       clickMovePlayer(event);
     }
+  }, false);
 
-    if (canShoot.value && numBalls > 0) {
-      shoot(event);
+  globalThis.addEventListener("keydown", (event) => {
+    if (event.code === "Space" && !event.repeat) {
+      event.preventDefault(); // prevent page scroll
+      shoot();
     }
   }, false);
+
+  const clientCoords = {
+    x: null,
+    y: null,
+  };
+
+  globalThis.addEventListener("mousemove", (event) => {
+    updateAimTarget(event);
+  });
 
   /*
   const keys = {
