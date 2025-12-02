@@ -39,11 +39,40 @@ const mouseCoords = new THREE.Vector2(),
   raycaster = new THREE.Raycaster(),
   aimTarget = new THREE.Vector3();
 
+function setMouseFromEvent(event) {
+  // Use the actual canvas position/size, not full window
+  const rect = renderer.domElement.getBoundingClientRect();
+  mouseCoords.set(
+    ((event.clientX - rect.left) / rect.width) * 2 - 1,
+    -((event.clientY - rect.top) / rect.height) * 2 + 1,
+  );
+}
+
 const STATE = { DISABLE_DEACTIVATION: 4 };
 const FLAGS = { CF_KINEMATIC_OBJ: 2 };
 
 const cameraOffset = new THREE.Vector3(0, 20, 40);
 const cameraSmoothness = 0.05;
+
+// Camera orbit controls (right-mouse drag)
+let isRightMouseDown = false;
+let lastMouseX = 0;
+let lastMouseY = 0;
+
+// Convert the base offset into spherical-style angles
+let cameraYaw = Math.atan2(cameraOffset.x, cameraOffset.z);
+let cameraPitch = Math.asin(
+  cameraOffset.y / cameraOffset.length(),
+);
+
+// Limits + speed
+const minPitch = -Math.PI / 6; // look slightly down
+const maxPitch = Math.PI / 3; // look somewhat up
+const rotateSpeed = 0.005; // radians per pixel
+
+// Camera collision
+const cameraCollisionObjects = [];
+const cameraCollisionOffset = 0.5; // how far in front of a wall the camera stops
 
 const equippableBalls = [];
 export const canShoot = { value: false };
@@ -72,6 +101,7 @@ function start() {
   const { scene: s, camera: c, renderer: r, clock: k } = initGraphics();
   scene = s, camera = c, renderer = r, clock = k;
   initEventHandlers();
+  initCameraControls();
 
   createGround();
   createPlayer();
@@ -86,6 +116,50 @@ function start() {
   cbContactPairResult = initContactPairResultCallback();
 
   renderFrame();
+}
+
+function initCameraControls() {
+  const domElement = renderer.domElement;
+
+  // Prevent the default context menu on right-click
+  domElement.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+  });
+
+  domElement.addEventListener("mousedown", (e) => {
+    if (e.button === 2) {
+      // right mouse button
+      isRightMouseDown = true;
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+    }
+  });
+
+  domElement.addEventListener("mouseup", (e) => {
+    if (e.button === 2) {
+      isRightMouseDown = false;
+    }
+  });
+
+  domElement.addEventListener("mouseleave", () => {
+    isRightMouseDown = false;
+  });
+
+  domElement.addEventListener("mousemove", (e) => {
+    if (!isRightMouseDown) return;
+
+    const deltaX = e.clientX - lastMouseX;
+    const deltaY = e.clientY - lastMouseY;
+    lastMouseX = e.clientX;
+    lastMouseY = e.clientY;
+
+    // Horizontal drag rotates the camera around the player
+    cameraYaw -= deltaX * rotateSpeed;
+
+    // Vertical drag tilts up/down (clamped)
+    cameraPitch -= deltaY * rotateSpeed;
+    cameraPitch = Math.max(minPitch, Math.min(maxPitch, cameraPitch));
+  });
 }
 
 function renderFrame() {
@@ -126,6 +200,8 @@ function createGround() {
     color,
   );
   groundBlock = block;
+
+  cameraCollisionObjects.push(groundBlock);
 
   groundBody.setFriction(4);
   groundBody.setRollingFriction(10);
@@ -218,6 +294,7 @@ function createRoom() {
       color = 0x444444;
 
     const { block, body } = createBlock(pos, scale, quat, mass, color);
+    cameraCollisionObjects.push(block);
     body.setFriction(friction);
     physicsWorld.addRigidBody(body);
     block.userData.physicsBody = body;
@@ -231,6 +308,7 @@ function createRoom() {
       color = 0x444444;
 
     const { block, body } = createBlock(pos, scale, quat, mass, color);
+    cameraCollisionObjects.push(block);
     body.setFriction(friction);
     physicsWorld.addRigidBody(body);
     block.userData.physicsBody = body;
@@ -244,6 +322,7 @@ function createRoom() {
       color = 0x444444;
 
     const { block, body } = createBlock(pos, scale, quat, mass, color);
+    cameraCollisionObjects.push(block);
     body.setFriction(friction);
     physicsWorld.addRigidBody(body);
     block.userData.physicsBody = body;
@@ -257,6 +336,7 @@ function createRoom() {
       color = 0x444444;
 
     const { block, body } = createBlock(pos, scale, quat, mass, color);
+    cameraCollisionObjects.push(block);
     body.setFriction(friction);
     physicsWorld.addRigidBody(body);
     block.userData.physicsBody = body;
@@ -272,6 +352,7 @@ function createDoor() {
 
   const { block, body } = createBlock(pos, scale, quat, mass, color);
   doorBlock = block;
+  cameraCollisionObjects.push(doorBlock);
   doorBlock.userData.physicsBody = body;
   physicsWorld.addRigidBody(body);
   rigidBodies.push(block);
@@ -284,27 +365,57 @@ function createEquippableBalls() {
     color = 0x00aaff;
 
   const roomSize = 500,
-    wallPadding = 20;
+    minDistance = 80,
+    maxRetries = 100;
+
+  const placedPositions = [];
+  const playerPos = new THREE.Vector3(0, 20, 0);
+
+  function isFarEnough(pos) {
+    if (pos.distanceTo(playerPos) < minDistance) {
+      return false;
+    }
+
+    for (const placed of placedPositions) {
+      if (pos.distanceTo(placed) < minDistance) {
+        return false;
+      }
+    }
+
+    return true;
+  }
 
   for (let i = 0; i < numEquipBalls; i++) {
-    const angle = (i / numEquipBalls) * Math.PI * 2;
-
-    const r = (roomSize / 2) - wallPadding;
-
-    const x = Math.cos(angle) * r;
-    const z = Math.sin(angle) * r;
-    const pos = { x, y: height, z };
+    let pos, attempts;
+    for (attempts = 0; attempts < maxRetries; attempts++) {
+      pos = new THREE.Vector3(
+        (Math.random() - 0.5) * roomSize,
+        height,
+        (Math.random() - 0.5) * roomSize,
+      );
+      if (isFarEnough(pos)) break;
+    }
 
     const quat = { x: 0, y: 0, z: 0, w: 1 };
-    const mass = 0;
+    const mass = 1;
 
-    const { ball, body } = createBall(pos, radius, quat, mass, color);
+    const { ball, body } = createBall(
+      { x: pos.x, y: pos.y, z: pos.z },
+      radius,
+      quat,
+      mass,
+      color,
+    );
 
-    physicsWorld.addRigidBody(body);
     ball.userData.physicsBody = body;
 
     equippableBalls.push(ball);
-    rigidBodies.push(ball);
+
+    ball.userData == "ground";
+
+    body.setActivationState(STATE.DISABLE_DEACTIVATION);
+    physicsWorld.addRigidBody(body);
+    numBalls++;
   }
 }
 
@@ -465,55 +576,108 @@ function updateCameraFollow() {
   if (!playerBody) return;
   const ballPos = rigidBodies[0].position;
 
+  // Compute dynamic offset from yaw/pitch
+  const radius = cameraOffset.length();
+  const y = radius * Math.sin(cameraPitch);
+  const horizontalRadius = radius * Math.cos(cameraPitch);
+  const x = horizontalRadius * Math.sin(cameraYaw);
+  const z = horizontalRadius * Math.cos(cameraYaw);
+
   const desiredPos = new THREE.Vector3(
-    ballPos.x + cameraOffset.x,
-    ballPos.y + cameraOffset.y,
-    ballPos.z + cameraOffset.z,
+    ballPos.x + x,
+    ballPos.y + y,
+    ballPos.z + z,
   );
 
-  camera.position.lerp(desiredPos, cameraSmoothness);
+  const origin = new THREE.Vector3(ballPos.x, ballPos.y, ballPos.z);
+  const direction = new THREE.Vector3()
+    .subVectors(desiredPos, origin)
+    .normalize();
+
+  // deno-lint-ignore prefer-const
+  let finalPos = desiredPos.clone();
+
+  if (cameraCollisionObjects.length > 0) {
+    raycaster.set(origin, direction);
+    raycaster.far = radius; // only check up to the desired distance
+
+    const hits = raycaster.intersectObjects(cameraCollisionObjects, false);
+
+    if (hits.length > 0) {
+      // Put camera just before the first hit
+      finalPos.copy(hits[0].point).addScaledVector(
+        direction,
+        -cameraCollisionOffset,
+      );
+    }
+  }
+
+  camera.position.lerp(finalPos, cameraSmoothness);
   camera.lookAt(ballPos);
 }
 
 export function clickEquipBalls(event) {
-  mouseCoords.set(
-    (event.clientX / globalThis.innerWidth) * 2 - 1,
-    -(event.clientY / globalThis.innerHeight) * 2 + 1,
-  );
-  raycaster.setFromCamera(mouseCoords, camera);
+  if (event.button !== 0) return false;
 
-  const hit = raycaster.intersectObjects(equippableBalls, true);
+  if (equippableBalls.length === 0) return false;
 
-  if (hit.length > 0) {
-    const clicked = hit[0].object;
-    const body = clicked.userData.physicsBody;
+  // Get mouse position relative to the canvas in pixels
+  const rect = renderer.domElement.getBoundingClientRect();
+  const mouseX = event.clientX - rect.left;
+  const mouseY = event.clientY - rect.top;
 
-    canShoot.value = true;
-    console.log("Ball Clicked!");
+  // How close (in pixels) the click must be to count as hitting a ball
+  const maxClickDist = 30;
+  const maxClickDistSq = maxClickDist * maxClickDist;
 
-    scene.remove(clicked);
-    physicsWorld.removeRigidBody(body);
+  let closestBall = null;
+  let closestDistSq = Infinity;
 
-    for (let i = 0; i < equippableBalls.length; i++) {
-      if (equippableBalls[i] === clicked) {
-        equippableBalls[i] = equippableBalls[equippableBalls.length - 1];
-        equippableBalls.length--;
-        console.log("ball removed");
-        numBalls++;
-        updateBallCounter();
-        break;
-      }
+  // Find the ball whose projected screen position is closest to the mouse
+  for (const ball of equippableBalls) {
+    const screenPos = ball.position.clone().project(camera);
+
+    // Convert from NDC (-1..1) to pixel coords
+    const ballX = (screenPos.x * 0.5 + 0.5) * rect.width;
+    const ballY = (-screenPos.y * 0.5 + 0.5) * rect.height;
+
+    const dx = ballX - mouseX;
+    const dy = ballY - mouseY;
+    const distSq = dx * dx + dy * dy;
+
+    if (distSq < maxClickDistSq && distSq < closestDistSq) {
+      closestDistSq = distSq;
+      closestBall = ball;
     }
-    return true;
   }
-  return false;
+
+  // Nothing close enough to the click
+  if (!closestBall) return false;
+
+  const clicked = closestBall;
+  const body = clicked.userData.physicsBody;
+
+  canShoot.value = true;
+  console.log("Ball Clicked!");
+
+  scene.remove(clicked);
+  physicsWorld.removeRigidBody(body);
+
+  for (let i = 0; i < equippableBalls.length; i++) {
+    if (equippableBalls[i] === clicked) {
+      equippableBalls[i] = equippableBalls[equippableBalls.length - 1];
+      equippableBalls.length--;
+      console.log("ball removed");
+      numBalls++;
+      updateBallCounter();
+      break;
+    }
+  }
+  return true;
 }
 
 export function updateAimTarget(event) {
-  mouseCoords.set(
-    (event.clientX / globalThis.innerWidth) * 2 - 1,
-    -(event.clientY / globalThis.innerHeight) * 2 + 1,
-  );
+  setMouseFromEvent(event);
   raycaster.setFromCamera(mouseCoords, camera);
 
   const groundPlane = new THREE.Plane(
@@ -528,10 +692,8 @@ export function updateAimTarget(event) {
 }
 
 export function clickMovePlayer(event) {
-  mouseCoords.set(
-    (event.clientX / globalThis.innerWidth) * 2 - 1,
-    -(event.clientY / globalThis.innerHeight) * 2 + 1,
-  );
+  if (event.button !== 0) return;
+  setMouseFromEvent(event);
   raycaster.setFromCamera(mouseCoords, camera);
 
   const groundPlane = new THREE.Plane(

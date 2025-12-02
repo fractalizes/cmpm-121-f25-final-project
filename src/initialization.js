@@ -82,6 +82,7 @@ export function initEventHandlers() {
   */
 
   globalThis.addEventListener("mousedown", (event) => {
+    if (event.button !== 0) return;
     const equipped = clickEquipBalls(event);
 
     if (equipped) {
