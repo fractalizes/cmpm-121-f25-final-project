@@ -146,19 +146,25 @@ function initCameraControls() {
   });
 
   domElement.addEventListener("mousemove", (e) => {
-    if (!isRightMouseDown) return;
+    if (isRightMouseDown) {
+      const deltaX = e.clientX - lastMouseX;
+      const deltaY = e.clientY - lastMouseY;
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
 
-    const deltaX = e.clientX - lastMouseX;
-    const deltaY = e.clientY - lastMouseY;
-    lastMouseX = e.clientX;
-    lastMouseY = e.clientY;
+      // Horizontal drag rotates the camera around the player
+      cameraYaw -= deltaX * rotateSpeed;
 
-    // Horizontal drag rotates the camera around the player
-    cameraYaw -= deltaX * rotateSpeed;
-
-    // Vertical drag tilts up/down (clamped)
-    cameraPitch -= deltaY * rotateSpeed;
-    cameraPitch = Math.max(minPitch, Math.min(maxPitch, cameraPitch));
+      // Vertical drag tilts up/down (clamped)
+      cameraPitch = Math.max(
+        minPitch,
+        Math.min(maxPitch, cameraPitch - deltaY * rotateSpeed),
+      );
+    } else {
+      // only update mouseCoords and aimTarget when not dragging right click
+      setMouseFromEvent(e);
+      updateAimPoint(e);
+    }
   });
 }
 
@@ -408,14 +414,11 @@ function createEquippableBalls() {
     );
 
     ball.userData.physicsBody = body;
-
     equippableBalls.push(ball);
 
     ball.userData == "ground";
-
     body.setActivationState(STATE.DISABLE_DEACTIVATION);
     physicsWorld.addRigidBody(body);
-    numBalls++;
   }
 }
 
@@ -620,7 +623,7 @@ export function clickEquipBalls(event) {
   if (event.button !== 0) return false;
 
   if (equippableBalls.length === 0) return false;
-
+  // AAAAAAA
   // Get mouse position relative to the canvas in pixels
   const rect = renderer.domElement.getBoundingClientRect();
   const mouseX = event.clientX - rect.left;
@@ -676,7 +679,8 @@ export function clickEquipBalls(event) {
   return true;
 }
 
-export function updateAimTarget(event) {
+export function updateAimPoint(event) {
+  if (isRightMouseDown) return; // prevent aimTarget updates during camera control
   setMouseFromEvent(event);
   raycaster.setFromCamera(mouseCoords, camera);
 
@@ -785,20 +789,30 @@ function blockHitsFloor() {
 export function shoot() {
   if (!canShoot.value || numBalls <= 0) return;
 
-  const pos = { x: aimTarget.x, y: aimTarget.y, z: aimTarget.z },
+  const spawnPos = playerBall.position.clone().add(new THREE.Vector3(0, 5, 0)),
     radius = 1,
     quat = { x: 0, y: 0, z: 0, w: 1 },
     mass = 1,
     color = 0x6b246e;
 
-  const { ball: ball, body: body } = createBall(pos, radius, quat, mass, color);
+  const { ball: ball, body: body } = createBall(
+    { x: spawnPos.x, y: spawnPos.y, z: spawnPos.z },
+    radius,
+    quat,
+    mass,
+    color,
+  );
   physicsWorld.addRigidBody(body);
 
-  aimTarget.copy(raycaster.ray.direction);
-  aimTarget.multiplyScalar(100);
+  raycaster.setFromCamera(mouseCoords, camera);
+  const shootDirection = raycaster.ray.direction.clone().multiplyScalar(100);
 
   body.setLinearVelocity(
-    new Ammo.btVector3(aimTarget.x, aimTarget.y, aimTarget.z),
+    new Ammo.btVector3(
+      shootDirection.x,
+      shootDirection.y,
+      shootDirection.z,
+    ),
   );
 
   ball.userData.physicsBody = body;

@@ -4,7 +4,7 @@ import {
   clickEquipBalls,
   clickMovePlayer,
   shoot,
-  updateAimTarget,
+  updateAimPoint,
 } from "./main.js";
 
 export function initPhysicsWorld() {
@@ -101,7 +101,7 @@ export function initEventHandlers() {
   }, false);
 
   globalThis.addEventListener("mousemove", (event) => {
-    updateAimTarget(event);
+    updateAimPoint(event);
   });
 }
 
