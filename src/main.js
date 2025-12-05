@@ -111,6 +111,7 @@ function start() {
   createRoom();
   createDoor();
   updateBallCounter();
+  showStartupMessage();
 
   cbContactResult = initContactResultCallback();
   cbContactPairResult = initContactPairResultCallback();
@@ -541,6 +542,23 @@ function checkContact() {
 
 function updateBallCounter() {
   ballCounterDiv.textContent = "Balls: " + numBalls;
+}
+
+function showStartupMessage() {
+    const msg = document.getElementById("gameMessage");
+
+    msg.innerHTML = `
+        Left click to move/pick up balls.<br>
+        Hold right click to pan the camera.<br>
+        Press SPACE to shoot balls.
+    `;
+
+    msg.style.display = "block";
+
+    // Hide message after 20 seconds
+    setTimeout(() => {
+        msg.style.display = "none";
+    }, 20000);
 }
 
 // ----------------------------------- //
