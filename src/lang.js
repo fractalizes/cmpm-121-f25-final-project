@@ -1,5 +1,4 @@
 export const LANGUAGES = {
-
   en: {
     controlsMessage: `
       Left click anywhere to move.<br>
@@ -9,7 +8,8 @@ export const LANGUAGES = {
     `,
     ballCount: (n) => `Balls: ${n}`,
     winMessage: `you have successfully knocked down the orange cube! :D`,
-    loseMessage: `you have lost, you have not knocked down the orange cube and ran out of balls :(`,
+    loseMessage:
+      `you have lost, you have not knocked down the orange cube and ran out of balls :(`,
   },
 
   es: {
@@ -21,7 +21,7 @@ export const LANGUAGES = {
     `,
     ballCount: (n) => `Bolas: ${n}`,
     winMessage: `¡has derribado con éxito el cubo naranja! :D`,
-    loseMessage: `has perdido, no has derribado el dado naranja y te has quedado sin bolas :(`,
-  }
-
+    loseMessage:
+      `has perdido, no has derribado el dado naranja y te has quedado sin bolas :(`,
+  },
 };

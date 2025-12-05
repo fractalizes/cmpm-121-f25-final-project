@@ -5,7 +5,7 @@
 
 import { LANGUAGES } from "./lang.js";
 
-let currentLanguage = "en"; 
+let currentLanguage = "en";
 
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js";
 import {
@@ -564,16 +564,16 @@ function updateBallCounter() {
 }
 
 function showStartupMessage() {
-    const msg = document.getElementById("gameMessage");
+  const msg = document.getElementById("gameMessage");
 
-    msg.innerHTML = LANGUAGES[currentLanguage].controlsMessage;
+  msg.innerHTML = LANGUAGES[currentLanguage].controlsMessage;
 
-    msg.style.display = "block";
+  msg.style.display = "block";
 
-    // Hide message after 20 seconds
-    setTimeout(() => {
-        msg.style.display = "none";
-    }, 20000);
+  // Hide message after 20 seconds
+  setTimeout(() => {
+    msg.style.display = "none";
+  }, 20000);
 }
 
 // ----------------------------------- //
@@ -816,7 +816,6 @@ function blockHitsFloor() {
     }, 3000);
   }
 }
-
 
 export function shoot() {
   if (!canShoot.value || numBalls <= 0) return;
