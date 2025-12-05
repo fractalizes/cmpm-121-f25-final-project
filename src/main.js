@@ -18,11 +18,20 @@ import {
 
 document.getElementById("lang_en").onclick = () => changeLanguage("en");
 document.getElementById("lang_es").onclick = () => changeLanguage("es");
+document.getElementById("lang_ch").onclick = () => changeLanguage("ch");
+document.getElementById("lang_ar").onclick = () => changeLanguage("ar");
 
 function changeLanguage(code) {
   currentLanguage = code;
 
   updateBallCounter();
+
+  const direction = document.getElementById("Direction");
+  if (code === "ar") {
+    direction.dir = "rtl";
+  } else {
+    direction.dir = "ltr";
+  }
 
   const msg = document.getElementById("gameMessage");
 

@@ -24,4 +24,28 @@ export const LANGUAGES = {
     loseMessage:
       `has perdido, no has derribado el dado naranja y te has quedado sin bolas :(`,
   },
+
+  ch: {
+    controlsMessage: `
+      左键点击任意位置移动。<br>
+      点击蓝色球体以收集。<br>
+      按空格键射击。<br>
+      按住右键拖动以旋转镜头。
+    `,
+    ballCount: (n) => `球数：${n}`,
+    winMessage: `你成功击倒了橙色立方体！ :D`,
+    loseMessage: `你失败了——球用完了，仍未击倒立方体 :(`,
+  },
+
+  ar: {
+    controlsMessage: `
+      اضغط بزر الفأرة الأيسر للتحرك.<br>
+      اضغط على الكرة الزرقاء لالتقاطها.<br>
+      اضغط على مفتاح المسافة لإطلاق الكرة.<br>
+      اسحب بزر الفأرة الأيمن لتدوير الكاميرا.
+    `,
+    ballCount: (n) => `الكرات: ${n}`,
+    winMessage: `لقد أسقطت المكعب البرتقالي بنجاح! :D`,
+    loseMessage: `لقد خسرت — نفدت الكرات ولم تسقط المكعب :(`,
+  },
 };
