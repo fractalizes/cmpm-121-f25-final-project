@@ -4,6 +4,7 @@ import {
   clickEquipBalls,
   clickMovePlayer,
   shoot,
+  undo,
   updateAimPoint,
 } from "./main.js";
 
@@ -97,6 +98,10 @@ export function initEventHandlers() {
     if (event.code === "Space" && !event.repeat) {
       event.preventDefault(); // prevent page scroll
       shoot();
+    }
+
+    if (event.code === "KeyU") {
+      undo();
     }
   }, false);
 

@@ -40,6 +40,19 @@ function changeLanguage(code) {
   }
 }
 
+// Undo actions
+
+const undoStack = [];
+
+function pushUndoState() {
+  undoStack.push(captureGameState());
+}
+
+export function undo() {
+  if (undoStack.length === 0) return;
+  restoreGameState(undoStack.pop());
+}
+
 // ----------------------------------- //
 // ---                             --- //
 // ---          VARIABLES          --- //
@@ -662,6 +675,7 @@ function updateCameraFollow() {
 }
 
 export function clickEquipBalls(event) {
+  pushUndoState();
   if (event.button !== 0) return false;
 
   if (equippableBalls.length === 0) return false;
@@ -738,6 +752,7 @@ export function updateAimPoint(event) {
 }
 
 export function clickMovePlayer(event) {
+  pushUndoState();
   if (event.button !== 0) return;
   setMouseFromEvent(event);
   raycaster.setFromCamera(mouseCoords, camera);
@@ -827,6 +842,7 @@ function blockHitsFloor() {
 }
 
 export function shoot() {
+  pushUndoState();
   if (!canShoot.value || numBalls <= 0) return;
 
   const spawnPos = playerBall.position.clone().add(new THREE.Vector3(0, 5, 0)),
@@ -864,6 +880,7 @@ export function shoot() {
 }
 
 function switchToRoom2() {
+  pushUndoState();
   currentRoom = 2;
   popUp = false;
   checkBallHit = false;
@@ -888,4 +905,81 @@ function switchToRoom2() {
   playerBody.setWorldTransform(transform);
 
   console.log("Switched to room 2, balls owned: ", numBalls);
+}
+
+// Undo functions
+
+function captureGameState() {
+  const state = {};
+
+  state.room = currentRoom;
+
+  if (playerBall) {
+    state.player = playerBall.position.clone();
+  } else {
+    state.player = null;
+  }
+
+  if (puzzleBlock) {
+    state.puzzle = puzzleBlock.position.clone();
+  } else {
+    state.puzzle = null;
+  }
+
+  state.numBalls = numBalls;
+  state.ballsUsed = ballsUsed;
+
+  state.equippable = [];
+  for (const ball of equippableBalls) {
+    const savedBall = { pos: ball.position.clone() };
+    state.equippable.push(savedBall);
+  }
+
+  return state;
+}
+
+function restoreGameState(state) {
+  currentRoom = state.room;
+
+  if (playerBall && state.player) {
+    playerBall.position.copy(state.player);
+
+    const t = playerBody.getWorldTransform();
+    t.setOrigin(
+      new Ammo.btVector3(state.player.x, state.player.y, state.player.z),
+    );
+    playerBody.setWorldTransform(t);
+  }
+
+  if (puzzleBlock && state.puzzle) {
+    puzzleBlock.position.copy(state.puzzle);
+    const t = puzzleBody.getWorldTransform();
+    t.setOrigin(
+      new Ammo.btVector3(state.puzzle.x, state.puzzle.y, state.puzzle.z),
+    );
+    puzzleBody.setWorldTransform(t);
+  }
+
+  numBalls = state.numBalls;
+  ballsUsed = state.ballsUsed;
+  updateBallCounter();
+
+  for (const ball of equippableBalls) {
+    scene.remove(ball);
+    physicsWorld.removeRigidBody(ball.userData.physicsBody);
+  }
+  equippableBalls.length = 0;
+
+  for (const saved of state.equippable) {
+    const { ball, body } = createBall(
+      { x: saved.pos.x, y: saved.pos.y, z: saved.pos.z },
+      2,
+      { x: 0, y: 0, z: 0, w: 1 },
+      1,
+      0x00aaff,
+    );
+    ball.userData.physicsBody = body;
+    equippableBalls.push(ball);
+    physicsWorld.addRigidBody(body);
+  }
 }
