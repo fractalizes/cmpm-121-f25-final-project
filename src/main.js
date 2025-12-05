@@ -3,6 +3,10 @@
 // https://medium.com/@bluemagnificent/moving-objects-in-javascript-3d-physics-using-ammo-js-and-three-js-6e39eff6d9e5
 // https://medium.com/@bluemagnificent/collision-detection-in-javascript-3d-physics-using-ammo-js-and-three-js-31a5569291ef
 
+import { LANGUAGES } from "./lang.js";
+
+let currentLanguage = "en"; 
+
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js";
 import {
   initContactPairResultCallback,
@@ -11,6 +15,21 @@ import {
   initGraphics,
   initPhysicsWorld,
 } from "./initialization.js";
+
+document.getElementById("lang_en").onclick = () => changeLanguage("en");
+document.getElementById("lang_es").onclick = () => changeLanguage("es");
+
+function changeLanguage(code) {
+  currentLanguage = code;
+
+  updateBallCounter();
+
+  const msg = document.getElementById("gameMessage");
+
+  if (msg.style.display === "block") {
+    msg.innerHTML = LANGUAGES[currentLanguage].controlsMessage;
+  }
+}
 
 // ----------------------------------- //
 // ---                             --- //
@@ -541,17 +560,13 @@ function checkContact() {
 }
 
 function updateBallCounter() {
-  ballCounterDiv.textContent = "Balls: " + numBalls;
+  ballCounterDiv.textContent = LANGUAGES[currentLanguage].ballCount(numBalls);
 }
 
 function showStartupMessage() {
     const msg = document.getElementById("gameMessage");
 
-    msg.innerHTML = `
-        Left click to move/pick up balls.<br>
-        Hold right click to pan the camera.<br>
-        Press SPACE to shoot balls.
-    `;
+    msg.innerHTML = LANGUAGES[currentLanguage].controlsMessage;
 
     msg.style.display = "block";
 
@@ -777,7 +792,7 @@ function blockHitsFloor() {
   if (cbContactPairResult.hasContact) {
     checkBallHit = true;
     popUp = true;
-    globalThis.alert("you have successfully knocked down the orange cube! :D");
+    globalThis.alert(LANGUAGES[currentLanguage].winMessage);
     return;
   }
 
@@ -794,15 +809,14 @@ function blockHitsFloor() {
 
       if (!cbContactPairResult.hasContact) {
         checkBallHit = true;
-        globalThis.alert(
-          "you have lost, you have not knocked down the orange cube and ran out of balls :(",
-        );
+        globalThis.alert(LANGUAGES[currentLanguage].winMessage);
       }
 
       popUp = true;
     }, 3000);
   }
 }
+
 
 export function shoot() {
   if (!canShoot.value || numBalls <= 0) return;
