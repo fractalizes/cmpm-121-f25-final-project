@@ -51,7 +51,46 @@ function pushUndoState() {
 export function undo() {
   if (undoStack.length === 0) return;
   restoreGameState(undoStack.pop());
+  autoSave();
 }
+
+// ----------------------------------- //
+// ---                             --- //
+// ---         Save System         --- //
+// ---                             --- //
+// ----------------------------------- //
+
+const saveKey = "gameSaveData";
+
+function autoSave() {
+  const state = captureGameState();
+  localStorage.setItem(saveKey, JSON.stringify(state));
+  console.log("Game Auto-saved");
+}
+
+function saveGame() {
+  const state = captureGameState();
+  localStorage.setItem(saveKey, JSON.stringify(state));
+  console.log("Game Saved");
+}
+
+function loadGame() {
+  const data = localStorage.getItem(saveKey);
+  if (!data) {
+    console.log("No save data found");
+    return;
+  }
+  const state = JSON.parse(data);
+  restoreGameState(state);
+  console.log("Game successfully loaded");
+}
+
+function deleteSave() {
+  localStorage.removeItem(saveKey);
+  console.log("Save data deleted");
+}
+
+export { deleteSave, loadGame, saveGame };
 
 // ----------------------------------- //
 // ---                             --- //
@@ -732,6 +771,7 @@ export function clickEquipBalls(event) {
       break;
     }
   }
+  autoSave();
   return true;
 }
 
@@ -765,6 +805,7 @@ export function clickMovePlayer(event) {
 
   if (!raycaster.ray.intersectPlane(groundPlane, intersection)) return;
   moveTarget = intersection.clone();
+  autoSave();
 }
 
 function updatePhysics(deltaTime) {
@@ -877,6 +918,7 @@ export function shoot() {
   numBalls--;
   ballsUsed++;
   updateBallCounter();
+  autoSave();
 }
 
 function switchToRoom2() {
@@ -905,6 +947,7 @@ function switchToRoom2() {
   playerBody.setWorldTransform(transform);
 
   console.log("Switched to room 2, balls owned: ", numBalls);
+  autoSave();
 }
 
 // Undo functions
@@ -938,8 +981,29 @@ function captureGameState() {
   return state;
 }
 
+function clearObjects() {
+  for (let i = rigidBodies.length - 1; i >= 0; i--) {
+    const obj = rigidBodies[i];
+    if (obj !== playerBall) {
+      scene.remove(obj);
+      physicsWorld.removeRigidBody(obj.userData.physicsBody);
+      rigidBodies.splice(i, 1);
+    }
+  }
+}
+
 function restoreGameState(state) {
   currentRoom = state.room;
+
+  if (currentRoom === 1) {
+    clearObjects();
+    createRoom();
+    createDoor();
+  } else if (currentRoom === 2) {
+    clearObjects();
+    createRoom();
+    createPuzzleBox();
+  }
 
   if (playerBall && state.player) {
     playerBall.position.copy(state.player);

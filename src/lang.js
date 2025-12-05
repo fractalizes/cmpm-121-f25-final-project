@@ -5,6 +5,9 @@ export const LANGUAGES = {
       Click a blue ball to collect it.<br>
       Press SPACE to shoot.<br>
       Press U to undo your last action.<br>
+      Press K to save game.<br>
+      Press L to load game.<br>
+      Press X to delete saved game<br>
       Right click and drag to rotate camera.
     `,
     ballCount: (n) => `Balls: ${n}`,
@@ -19,6 +22,9 @@ export const LANGUAGES = {
       Haz clic en una bola azul para recogerla.<br>
       Presiona ESPACIO para disparar.<br>
       Presiona U para deshacer la última acción.<br>
+      Presiona K para guardar el juego.<br>
+      Presiona L para cargar el juego.<br>
+      Presiona X para borrar la partida guardada.<br>
       Mantén clic derecho para rotar la cámara.
     `,
     ballCount: (n) => `Bolas: ${n}`,
@@ -33,6 +39,9 @@ export const LANGUAGES = {
       点击蓝色球体以收集。<br>
       按空格键射击。<br>
       按 U 撤销上一步操作。<br>
+      按下 K 保存游戏。<br>
+      按下 L 加载游戏。<br>
+      按下 X 删除存档。<br>
       按住右键拖动以旋转镜头。
     `,
     ballCount: (n) => `球数：${n}`,
@@ -46,6 +55,9 @@ export const LANGUAGES = {
       اضغط على الكرة الزرقاء لالتقاطها.<br>
       اضغط على مفتاح المسافة لإطلاق الكرة.<br>
       اضغط U للتراجع عن آخر خطوة.<br>
+      اضغط K لحفظ اللعبة.<br>
+      اضغط L لتحميل اللعبة.<br>
+      اضغط X لحذف البيانات المحفوظة.<br>
       اسحب بزر الفأرة الأيمن لتدوير الكاميرا.
     `,
     ballCount: (n) => `الكرات: ${n}`,

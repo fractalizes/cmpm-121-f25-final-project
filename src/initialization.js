@@ -3,6 +3,9 @@ import {
   canShoot,
   clickEquipBalls,
   clickMovePlayer,
+  deleteSave,
+  loadGame,
+  saveGame,
   shoot,
   undo,
   updateAimPoint,
@@ -102,6 +105,18 @@ export function initEventHandlers() {
 
     if (event.code === "KeyU") {
       undo();
+    }
+
+    if (event.code === "KeyK") {
+      saveGame();
+    }
+
+    if (event.code === "KeyL") {
+      loadGame();
+    }
+
+    if (event.code === "KeyX") {
+      deleteSave();
     }
   }, false);
 
