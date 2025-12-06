@@ -735,6 +735,36 @@ function updateCameraFollow() {
   camera.lookAt(ballPos);
 }
 
+function adjustCamera(targetPos) {
+  const playerPos = playerBall.position;
+  const direction = new THREE.Vector3().subVectors(targetPos, playerPos).setY(
+    0,
+  );
+  if (direction.lengthSq() === 0) return;
+
+  direction.normalize();
+
+  // set "behind" vector for camera
+  const offsetDistance = 40;
+  const cameraHeight = 20;
+
+  const angleOffset = Math.PI;
+  const behindX = Math.cos(angleOffset) * direction.x -
+    Math.sin(angleOffset) * direction.z;
+  const behindZ = Math.sin(angleOffset) * direction.x +
+    Math.cos(angleOffset) * direction.z;
+
+  const desiredPos = new THREE.Vector3(
+    playerPos.x + behindX * offsetDistance,
+    playerPos.y + cameraHeight,
+    playerPos.z + behindZ * offsetDistance,
+  );
+
+  const delta = new THREE.Vector3().subVectors(desiredPos, playerPos);
+  cameraYaw = Math.atan2(delta.x, delta.z);
+  cameraPitch = Math.asin(delta.y / delta.length());
+}
+
 export function clickEquipBalls(event) {
   pushUndoState();
   if (event.button !== 0) return false;
@@ -828,6 +858,11 @@ export function clickMovePlayer(event) {
 
   if (!raycaster.ray.intersectPlane(groundPlane, intersection)) return;
   moveTarget = intersection.clone();
+
+  if (onMobileDevice) {
+    adjustCamera(intersection);
+  }
+
   autoSave();
 }
 
