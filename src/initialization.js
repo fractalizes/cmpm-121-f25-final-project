@@ -79,6 +79,8 @@ export function initGraphics() {
   return { scene, camera, renderer, clock };
 }
 
+// huge thank you's to this stackoverflow right here :)
+// https://stackoverflow.com/questions/11381673/detecting-a-mobile-browser
 export function initMobileCheck() {
   let check = false;
   (function (a) {

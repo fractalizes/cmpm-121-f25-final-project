@@ -57,7 +57,7 @@ export function undo() {
 
 // ----------------------------------- //
 // ---                             --- //
-// ---         Save System         --- //
+// ---         SAVE SYSTEM         --- //
 // ---                             --- //
 // ----------------------------------- //
 
@@ -145,8 +145,8 @@ let cameraPitch = Math.asin(
   cameraOffset.y / cameraOffset.length(),
 );
 
+// mobile device variable
 let onMobileDevice = false;
-let shootButton;
 
 // Limits + speed
 const minPitch = -Math.PI / 6; // look slightly down
@@ -255,13 +255,38 @@ function initCameraControls() {
 
 function initMobileControls() {
   onMobileDevice = true;
-  shootButton = document.createElement("button");
+
+  const shootButton = document.createElement("button");
   shootButton.id = "shootButton";
   shootButton.innerHTML = "SHOOT";
-  document.body.append(shootButton);
   shootButton.disabled = true;
-
   shootButton.addEventListener("click", shoot);
+
+  const mobileButtons = document.createElement("div");
+  mobileButtons.id = "mobileButtons";
+
+  const undoButton = document.createElement("button");
+  undoButton.innerHTML = "[↶] undo";
+  undoButton.addEventListener("click", undo);
+  mobileButtons.append(undoButton);
+
+  const saveButton = document.createElement("button");
+  saveButton.innerHTML = "[✪] save";
+  saveButton.addEventListener("click", saveGame);
+  mobileButtons.append(saveButton);
+
+  const loadButton = document.createElement("button");
+  loadButton.innerHTML = "[🡇] load";
+  loadButton.addEventListener("click", loadGame);
+  mobileButtons.append(loadButton);
+
+  const deleteButton = document.createElement("button");
+  deleteButton.innerHTML = "[✖] delete";
+  deleteButton.addEventListener("click", deleteSave);
+  mobileButtons.append(deleteButton);
+
+  document.body.append(shootButton);
+  document.body.append(mobileButtons);
 }
 
 function renderFrame() {
