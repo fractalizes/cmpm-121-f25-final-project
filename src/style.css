@@ -17,6 +17,8 @@ body {
 }
 
 #gameMessage {
+  display: grid;
+  justify-content: center;
   position: absolute;
   top: 20px;
   left: 50%;
@@ -28,5 +30,33 @@ body {
   font-size: 20px;
   font-family: sans-serif;
   z-index: 1000;
-  display: none;
+}
+
+/* css for mobile users! */
+@media (max-width: 900px) {
+  #ballCounter {
+    font-size: 36px;
+  }
+
+  #gameMessage {
+    left: 20%;
+    transform: translateY(300%);
+    font-size: 13px;
+  }
+
+  #shootButton {
+    color: rgb(255, 255, 255);
+    background: rgba(0, 0, 0, 0.4);
+    border-color: rgb(255, 255, 255);
+    padding: 10px 15px;
+    border-radius: 8px;
+    position: absolute;
+    bottom: 10%;
+    left: 5%;
+    font-size: 100px;
+  }
+
+  #shootButton:disabled {
+    color: rgb(76, 76, 76);
+  }
 }

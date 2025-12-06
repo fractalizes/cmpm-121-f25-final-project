@@ -4,7 +4,6 @@
 // https://medium.com/@bluemagnificent/collision-detection-in-javascript-3d-physics-using-ammo-js-and-three-js-31a5569291ef
 
 import { LANGUAGES } from "./lang.js";
-
 let currentLanguage = "en";
 
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js";
@@ -13,6 +12,7 @@ import {
   initContactResultCallback,
   initEventHandlers,
   initGraphics,
+  initMobileCheck,
   initPhysicsWorld,
 } from "./initialization.js";
 
@@ -25,6 +25,7 @@ function changeLanguage(code) {
   currentLanguage = code;
 
   updateBallCounter();
+  updateShootButton();
 
   const direction = document.getElementById("Direction");
   if (code === "ar") {
@@ -109,7 +110,6 @@ let playerBall = null,
 let puzzleBlock = null,
   puzzleBody = null;
 let groundBlock = null;
-
 let moveTarget = null;
 let currentRoom = 1;
 let doorBlock = null;
@@ -144,6 +144,9 @@ let cameraYaw = Math.atan2(cameraOffset.x, cameraOffset.z);
 let cameraPitch = Math.asin(
   cameraOffset.y / cameraOffset.length(),
 );
+
+let onMobileDevice = false;
+let shootButton;
 
 // Limits + speed
 const minPitch = -Math.PI / 6; // look slightly down
@@ -180,6 +183,7 @@ function start() {
   physicsWorld = initPhysicsWorld();
   const { scene: s, camera: c, renderer: r, clock: k } = initGraphics();
   scene = s, camera = c, renderer = r, clock = k;
+  if (initMobileCheck()) initMobileControls();
   initEventHandlers();
   initCameraControls();
 
@@ -247,6 +251,17 @@ function initCameraControls() {
       updateAimPoint(e);
     }
   });
+}
+
+function initMobileControls() {
+  onMobileDevice = true;
+  shootButton = document.createElement("button");
+  shootButton.id = "shootButton";
+  shootButton.innerHTML = "SHOOT";
+  document.body.append(shootButton);
+  shootButton.disabled = true;
+
+  shootButton.addEventListener("click", shoot);
 }
 
 function renderFrame() {
@@ -621,7 +636,14 @@ function checkContact() {
 }
 
 function updateBallCounter() {
-  ballCounterDiv.textContent = LANGUAGES[currentLanguage].ballCount(numBalls);
+  ballCounterDiv.innerHTML = LANGUAGES[currentLanguage].ballCount(numBalls);
+}
+
+function updateShootButton() {
+  if (!onMobileDevice || !shootButton) return;
+  shootButton.textContent = LANGUAGES[currentLanguage].shootText;
+  if (!numBalls) shootButton.disabled = true;
+  else shootButton.disabled = false;
 }
 
 function showStartupMessage() {
@@ -768,6 +790,7 @@ export function clickEquipBalls(event) {
       console.log("ball removed");
       numBalls++;
       updateBallCounter();
+      updateShootButton();
       break;
     }
   }
@@ -918,6 +941,7 @@ export function shoot() {
   numBalls--;
   ballsUsed++;
   updateBallCounter();
+  updateShootButton();
   autoSave();
 }
 
@@ -1027,6 +1051,7 @@ function restoreGameState(state) {
   numBalls = state.numBalls;
   ballsUsed = state.ballsUsed;
   updateBallCounter();
+  updateShootButton();
 
   for (const ball of equippableBalls) {
     scene.remove(ball);
